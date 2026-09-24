@@ -94,6 +94,23 @@
   outline-offset: 4px;
 }
 
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(36px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+:global([data-enter]) .cardInner {
+  animation: cardIn 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--enter-delay, 0s);
+}
+
 @keyframes floatY {
   0%,
   100% {
@@ -111,6 +128,10 @@
 
   .cardPose {
     transition: none;
+  }
+
+  :global([data-enter]) .cardInner {
+    animation: none;
   }
 }
 

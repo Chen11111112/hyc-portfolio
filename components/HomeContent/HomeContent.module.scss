@@ -82,6 +82,68 @@
   color: #ffffff;
 }
 
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ruleIn {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+:global([data-enter]) .cornerTitle {
+  animation: riseIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+}
+
+:global([data-enter]) .cornerRule {
+  transform-origin: right center;
+  animation: ruleIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.32s both;
+}
+
+:global([data-enter]) .cornerLink {
+  animation: riseIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+:global([data-enter]) .cornerLink:nth-child(1) {
+  animation-delay: 0.4s;
+}
+
+:global([data-enter]) .cornerLink:nth-child(2) {
+  animation-delay: 0.48s;
+}
+
+:global([data-enter]) .cornerLink:nth-child(3) {
+  animation-delay: 0.56s;
+}
+
+:global([data-enter]) .brand {
+  animation: riseIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.45s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global([data-enter]) .cornerTitle,
+  :global([data-enter]) .cornerRule,
+  :global([data-enter]) .cornerLink,
+  :global([data-enter]) .brand {
+    animation: none;
+  }
+}
+
 .brand {
   position: fixed;
   right: clamp(1rem, 3vw, 2rem);

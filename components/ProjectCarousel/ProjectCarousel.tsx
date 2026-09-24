@@ -156,6 +156,7 @@ export default function ProjectCarousel({
                     "--accent": project.accent,
                     "--float-duration": `${5.2 + (stackIndex % 5) * 0.65}s`,
                     "--float-delay": `${(stackIndex % 7) * -0.4}s`,
+                    "--enter-delay": `${Math.max(0, t) * 0.5}s`,
                   } as React.CSSProperties
                 }
                 aria-label={`查看作品：${project.title}`}

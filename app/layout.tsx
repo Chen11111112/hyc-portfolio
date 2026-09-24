@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Inter } from "next/font/google";
 import localFont from "next/font/local";
+import PageEnter from "@/components/PageEnter/PageEnter";
 import layoutStyles from "./layout.module.scss";
 import "./globals.scss";
 
@@ -43,8 +44,10 @@ export default function RootLayout({
     >
       <body className="min-h-full">
         <div className={layoutStyles.siteMain}>
-          {children}
-          {modal}
+          <PageEnter>
+            {children}
+            {modal}
+          </PageEnter>
         </div>
       </body>
     </html>
