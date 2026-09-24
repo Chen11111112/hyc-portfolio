@@ -1,0 +1,55 @@
+.page {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #131316;
+  color: #f4f4f5;
+}
+
+.aboutWrap {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 50;
+  width: min(440px, 38vw);
+  height: 100vh;
+  padding: var(--marquee-height) 1.5rem 1.5rem clamp(1.25rem, 3vw, 2.5rem);
+  background: linear-gradient(
+    90deg,
+    #131316 0%,
+    #131316 42%,
+    rgba(19, 19, 22, 0.72) 68%,
+    rgba(19, 19, 22, 0) 100%
+  );
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  pointer-events: none;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.aboutWrap::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.brand {
+  position: fixed;
+  right: clamp(1rem, 3vw, 2rem);
+  bottom: clamp(1rem, 3vw, 2rem);
+  z-index: 60;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: rgba(244, 244, 245, 0.35);
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .aboutWrap {
+    width: min(100%, 92vw);
+    height: 100vh;
+  }
+}

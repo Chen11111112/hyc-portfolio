@@ -1,0 +1,92 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  pointer-events: auto;
+}
+
+.lead {
+  margin: 0;
+  font-size: var(--font-size-lead);
+  line-height: 1.55;
+  color: rgba(244, 244, 245, 0.92);
+  letter-spacing: 0.02em;
+}
+
+.name {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+}
+
+.roles {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(244, 244, 245, 0.55);
+  line-height: 1.7;
+}
+
+.section {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 0.75rem;
+}
+
+.heading {
+  margin: 0 0 0.4rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(244, 244, 245, 0.45);
+}
+
+.lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+}
+
+.line {
+  font-size: var(--font-size-body);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-body);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.table th,
+.table td {
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.table th {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: rgba(244, 244, 245, 0.45);
+  font-weight: 600;
+}
+
+.table td:nth-child(3),
+.table td:nth-child(4) {
+  white-space: normal;
+  min-width: 12rem;
+}
