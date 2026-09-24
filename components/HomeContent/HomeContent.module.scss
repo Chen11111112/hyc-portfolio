@@ -80,6 +80,14 @@
   font-weight: 400;
   letter-spacing: 0;
   color: #ffffff;
+  text-decoration: none;
+  pointer-events: auto;
+}
+
+.cornerLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.28em;
+  text-decoration-thickness: 1px;
 }
 
 @keyframes riseIn {

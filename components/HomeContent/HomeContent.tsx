@@ -22,9 +22,30 @@ export default function HomeContent({ activeProjectId = null }: Props) {
           <p className={styles.cornerTitle}>Portfolio</p>
           <hr className={styles.cornerRule} />
           <div className={styles.cornerLinks}>
-            <span className={styles.cornerLink}>Home</span>
-            <span className={styles.cornerLink}>About</span>
-            <span className={styles.cornerLink}>Course</span>
+            <a
+              className={styles.cornerLink}
+              href="https://hyc.eshachem.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Home
+            </a>
+            <a
+              className={styles.cornerLink}
+              href="https://hyc.eshachem.com/program/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Program
+            </a>
+            <a
+              className={styles.cornerLink}
+              href="https://course.hychen.space/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Course
+            </a>
           </div>
         </nav>
       )}
