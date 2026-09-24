@@ -5,6 +5,15 @@
   pointer-events: auto;
 }
 
+.mark {
+  margin: 0 0 20px 0;
+  font-size: clamp(4.5rem, 8vw, 7rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.85;
+  color: #f4f4f5;
+}
+
 .lead {
   margin: 0;
   font-size: var(--font-size-lead);
@@ -21,7 +30,7 @@
 
 .roles {
   margin: 0;
-  font-size: 0.72rem;
+  font-size: 1.05rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(244, 244, 245, 0.55);

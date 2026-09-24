@@ -28,7 +28,7 @@
   transform: translate(-50%, -50%);
   transform-style: flat;
   text-decoration: none;
-  pointer-events: auto;
+  pointer-events: none;
   cursor: grab;
   touch-action: none;
   user-select: none;
@@ -37,12 +37,9 @@
   animation-delay: var(--float-delay, 0s);
 }
 
-.card:active {
+.card:active,
+.cardPose:active {
   cursor: grabbing;
-}
-
-.sectionStill .card {
-  animation: none;
 }
 
 .cardPose {
@@ -50,6 +47,8 @@
   height: 100%;
   transform-style: preserve-3d;
   transition: transform 0.35s ease;
+  pointer-events: auto;
+  cursor: grab;
 }
 
 .cardInner {

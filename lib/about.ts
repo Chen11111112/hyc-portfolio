@@ -78,7 +78,7 @@ export type ProjectExperienceRow = {
 const ORG_NAMES = ["臺北榮民總醫院", "國立臺北商業大學"];
 
 const PROJECT_NAMES = [
-  "智慧病歷",
+  "智慧病歷生成式人工智慧輔助優化及擴充急診版資訊服務專案",
   "細胞病理管理平臺",
   "智慧新聞 - 英文學習平臺",
   "3D列印租借系統",

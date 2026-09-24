@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import type { Project } from "@/lib/projects";
 import styles from "./ProjectDetail.module.scss";
@@ -16,6 +16,10 @@ type Props = {
   onNext: () => void;
   variant?: "modal" | "page";
 };
+
+const SWIPE_THRESHOLD = 24;
+let detailWasOpen = false;
+let detailCloseTimer = 0;
 
 function ActionLink({
   href,
@@ -106,59 +110,96 @@ export default function ProjectDetail({
   onNext,
   variant = "modal",
 }: Props) {
-  const [dragX, setDragX] = useState(0);
-  const [dragging, setDragging] = useState(false);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
   const startX = useRef(0);
+  const startY = useRef(0);
   const pointerId = useRef<number | null>(null);
   const draggingRef = useRef(false);
+  const axisRef = useRef<"x" | "y" | null>(null);
 
-  useEffect(() => {
-    setDragX(0);
-    draggingRef.current = false;
-    setDragging(false);
-  }, [project.id]);
+  useLayoutEffect(() => {
+    window.clearTimeout(detailCloseTimer);
+    const drawer = drawerRef.current;
+    if (detailWasOpen && drawer) drawer.style.animation = "none";
+    detailCloseTimer = window.setTimeout(() => {
+      detailWasOpen = true;
+    }, 0);
+    return () => {
+      window.clearTimeout(detailCloseTimer);
+      detailCloseTimer = window.setTimeout(() => {
+        detailWasOpen = false;
+      }, 200);
+    };
+  }, []);
 
   const overlayClass =
     variant === "page" ? `${styles.overlay} ${styles.overlayPage}` : styles.overlay;
+
+  const settleTrack = useCallback(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    track.style.transition = "transform 0.28s cubic-bezier(0.22, 1, 0.36, 1)";
+    track.style.transform = "translate3d(-33.333%, 0, 0)";
+  }, []);
 
   const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
     pointerId.current = e.pointerId;
     startX.current = e.clientX;
+    startY.current = e.clientY;
+    axisRef.current = null;
     draggingRef.current = true;
-    setDragging(true);
-    e.currentTarget.setPointerCapture(e.pointerId);
+    const track = trackRef.current;
+    if (track) track.style.transition = "none";
   }, []);
 
   const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (!draggingRef.current || pointerId.current !== e.pointerId) return;
-    setDragX(e.clientX - startX.current);
+    const dx = e.clientX - startX.current;
+    const dy = e.clientY - startY.current;
+    if (!axisRef.current) {
+      if (Math.hypot(dx, dy) < 4) return;
+      axisRef.current = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+      if (axisRef.current === "y") {
+        draggingRef.current = false;
+        return;
+      }
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+    if (axisRef.current !== "x") return;
+    const track = trackRef.current;
+    if (!track) return;
+    track.style.transform = `translate3d(calc(-33.333% + ${dx}px), 0, 0)`;
   }, []);
 
   const onPointerUp = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       if (pointerId.current !== e.pointerId) return;
-      const delta = e.clientX - startX.current;
+      const dx = e.clientX - startX.current;
+      const horizontal = axisRef.current === "x";
       draggingRef.current = false;
-      setDragging(false);
-      setDragX(0);
+      axisRef.current = null;
       pointerId.current = null;
-      if (delta > 72) onPrev();
-      else if (delta < -72) onNext();
+      if (horizontal && dx > SWIPE_THRESHOLD && prev) {
+        onPrev();
+        return;
+      }
+      if (horizontal && dx < -SWIPE_THRESHOLD && next) {
+        onNext();
+        return;
+      }
+      settleTrack();
     },
-    [onNext, onPrev],
+    [next, onNext, onPrev, prev, settleTrack],
   );
 
   const onPointerCancel = useCallback(() => {
     draggingRef.current = false;
-    setDragging(false);
-    setDragX(0);
+    axisRef.current = null;
     pointerId.current = null;
-  }, []);
-
-  const trackTransform = dragging
-    ? `translate3d(calc(-33.333% + ${dragX}px), 0, 0)`
-    : "translate3d(-33.333%, 0, 0)";
+    settleTrack();
+  }, [settleTrack]);
 
   return (
     <aside
@@ -166,6 +207,7 @@ export default function ProjectDetail({
       aria-labelledby="project-detail-title"
     >
       <div
+        ref={drawerRef}
         className={styles.drawer}
         data-detail-drawer
         onClick={(e) => e.stopPropagation()}
@@ -222,10 +264,7 @@ export default function ProjectDetail({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
       >
-        <div
-          className={`${styles.swipeTrack} ${dragging ? styles.swipeTrackDragging : ""}`}
-          style={{ transform: trackTransform }}
-        >
+        <div ref={trackRef} className={styles.swipeTrack}>
           <article className={styles.slide} aria-hidden={!prev}>
             {prev ? <DetailPanel project={prev} /> : null}
           </article>

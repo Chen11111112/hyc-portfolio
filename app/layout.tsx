@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Inter } from "next/font/google";
-import Marquee from "@/components/Marquee/Marquee";
 import layoutStyles from "./layout.module.scss";
 import "./globals.scss";
 
@@ -34,9 +33,6 @@ export default function RootLayout({
       className={`${inter.variable} ${geistMono.variable} h-full`}
     >
       <body className="min-h-full">
-        <div className={layoutStyles.marqueeBar}>
-          <Marquee />
-        </div>
         <div className={layoutStyles.siteMain}>
           {children}
           {modal}

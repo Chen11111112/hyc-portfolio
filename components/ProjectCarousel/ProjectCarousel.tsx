@@ -62,7 +62,8 @@ export default function ProjectCarousel({
       if (e.button !== 0) return;
       dragDistance.current = 0;
       dragStart.current = { x: e.clientX, y: e.clientY, phase };
-      e.currentTarget.setPointerCapture(e.pointerId);
+      const pose = e.currentTarget.querySelector("[data-card-pose]");
+      if (pose instanceof HTMLElement) pose.setPointerCapture(e.pointerId);
     },
     [phase],
   );
@@ -113,7 +114,7 @@ export default function ProjectCarousel({
 
   return (
     <section
-      className={activeId ? `${styles.section} ${styles.sectionStill}` : styles.section}
+      className={styles.section}
       aria-label="專案輪播"
     >
       <div className={styles.zone}>
@@ -161,6 +162,7 @@ export default function ProjectCarousel({
               >
                 <div
                   className={styles.cardPose}
+                  data-card-pose
                   style={{ transform: poseTransform }}
                 >
                   <div className={styles.cardInner}>

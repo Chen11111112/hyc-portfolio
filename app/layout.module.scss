@@ -1,16 +1,3 @@
-.marqueeBar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: var(--marquee-height);
-  z-index: 9999;
-  overflow: hidden;
-  background: transparent;
-  border: none;
-  pointer-events: auto;
-}
-
 .siteMain {
   position: relative;
   z-index: 1;

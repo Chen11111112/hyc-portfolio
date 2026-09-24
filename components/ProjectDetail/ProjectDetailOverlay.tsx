@@ -4,6 +4,7 @@ import { useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { Project } from "@/lib/projects";
 import ProjectDetail from "./ProjectDetail";
+import styles from "./ProjectDetail.module.scss";
 
 type Props = {
   project: Project;
@@ -45,52 +46,26 @@ export default function ProjectDetailOverlay({
     };
   }, [goHome, goPrev, goNext, variant]);
 
-  useEffect(() => {
-    let startX = 0;
-    let startY = 0;
-    let armed = false;
-
-    const keepOpen = (target: EventTarget | null) => {
-      if (!(target instanceof Element)) return false;
-      if (target.closest("[data-about], [data-project-card]")) return true;
-      if (target.closest("a, button")) return true;
-      return false;
-    };
-
-    const onPointerDown = (e: PointerEvent) => {
-      if (e.button !== 0) return;
-      armed = !keepOpen(e.target);
-      startX = e.clientX;
-      startY = e.clientY;
-    };
-
-    const onPointerUp = (e: PointerEvent) => {
-      if (!armed) return;
-      armed = false;
-      if (keepOpen(e.target)) return;
-      if (Math.hypot(e.clientX - startX, e.clientY - startY) > 8) return;
-      goHome();
-    };
-
-    window.addEventListener("pointerdown", onPointerDown, true);
-    window.addEventListener("pointerup", onPointerUp, true);
-    return () => {
-      window.removeEventListener("pointerdown", onPointerDown, true);
-      window.removeEventListener("pointerup", onPointerUp, true);
-    };
-  }, [goHome]);
-
   return (
-    <ProjectDetail
-      project={project}
-      projectIndex={index}
-      projectTotal={projects.length}
-      prev={prev}
-      next={next}
-      onClose={goHome}
-      onPrev={goPrev}
-      onNext={goNext}
-      variant={variant}
-    />
+    <>
+      <button
+        type="button"
+        className={styles.dismiss}
+        aria-label="回到初始畫面"
+        tabIndex={-1}
+        onClick={goHome}
+      />
+      <ProjectDetail
+        project={project}
+        projectIndex={index}
+        projectTotal={projects.length}
+        prev={prev}
+        next={next}
+        onClose={goHome}
+        onPrev={goPrev}
+        onNext={goNext}
+        variant={variant}
+      />
+    </>
   );
 }

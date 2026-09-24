@@ -17,6 +17,17 @@ export default function HomeContent({ activeProjectId = null }: Props) {
         projects={projects}
         activeProjectId={activeProjectId}
       />
+      {!activeProjectId && (
+        <nav className={styles.cornerNav} aria-label="Portfolio">
+          <p className={styles.cornerTitle}>Portfolio</p>
+          <hr className={styles.cornerRule} />
+          <div className={styles.cornerLinks}>
+            <span className={styles.cornerLink}>Home</span>
+            <span className={styles.cornerLink}>About</span>
+            <span className={styles.cornerLink}>Course</span>
+          </div>
+        </nav>
+      )}
       <span className={styles.brand}>Hy.C</span>
     </div>
   );

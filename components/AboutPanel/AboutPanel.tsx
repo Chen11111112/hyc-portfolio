@@ -17,7 +17,7 @@ function ProjectExperienceTable() {
         <thead>
           <tr>
             <th>單位</th>
-            <th>活動名稱</th>
+            <th>專案名稱</th>
             <th>內容</th>
             <th>技術說明</th>
           </tr>
@@ -80,6 +80,7 @@ export default function AboutPanel() {
 
   return (
     <aside className={styles.panel}>
+      <p className={styles.mark}>Hy.C</p>
       <p className={styles.lead}>{displayLead}</p>
       {tech.length > 0 && (
         <p className={styles.roles}>{tech.join(" · ")}</p>

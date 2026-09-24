@@ -12,14 +12,14 @@
   top: 0;
   left: 0;
   z-index: 50;
-  width: min(440px, 38vw);
+  width: min(620px, 48vw);
   height: 100vh;
-  padding: var(--marquee-height) 1.5rem 1.5rem clamp(1.25rem, 3vw, 2.5rem);
+  padding: clamp(1.5rem, 4vh, 2.5rem) 1.75rem 1.75rem clamp(1.5rem, 3.5vw, 3rem);
   background: linear-gradient(
     90deg,
     #131316 0%,
-    #131316 42%,
-    rgba(19, 19, 22, 0.72) 68%,
+    #131316 40%,
+    rgba(19, 19, 22, 0.72) 70%,
     rgba(19, 19, 22, 0) 100%
   );
   overflow-x: hidden;
@@ -34,6 +34,51 @@
   display: none;
   width: 0;
   height: 0;
+}
+
+.cornerNav {
+  position: fixed;
+  right: clamp(1.25rem, 3vw, 2.5rem);
+  bottom: clamp(3.75rem, 7vw, 5.5rem);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1.25rem;
+  width: max-content;
+  pointer-events: none;
+}
+
+.cornerTitle {
+  margin: 0;
+  font-size: clamp(5.5rem, 11vw, 9.5rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.85;
+  color: #f4f4f5;
+}
+
+.cornerRule {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid #ffffff;
+}
+
+.cornerLinks {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.cornerLink {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: #ffffff;
 }
 
 .brand {
