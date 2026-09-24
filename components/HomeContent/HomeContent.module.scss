@@ -51,8 +51,9 @@
 
 .cornerTitle {
   margin: 0;
+  font-family: var(--font-mark), "IBM Plex Sans", sans-serif;
   font-size: clamp(5.5rem, 11vw, 9.5rem);
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -0.04em;
   line-height: 0.85;
   color: #f4f4f5;

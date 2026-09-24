@@ -7,8 +7,9 @@
 
 .mark {
   margin: 0 0 20px 0;
+  font-family: var(--font-mark), "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
   font-size: clamp(4.5rem, 8vw, 7rem);
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -0.04em;
   line-height: 0.85;
   color: #f4f4f5;

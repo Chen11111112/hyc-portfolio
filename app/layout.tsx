@@ -1,11 +1,20 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Inter } from "next/font/google";
+import localFont from "next/font/local";
 import layoutStyles from "./layout.module.scss";
 import "./globals.scss";
 
 const inter = Inter({
   variable: "--font-sans",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const plexSans = localFont({
+  src: "./fonts/IBMPlexSans-Bold.woff2",
+  weight: "700",
+  style: "normal",
+  variable: "--font-mark",
   display: "swap",
 });
 
@@ -30,7 +39,7 @@ export default function RootLayout({
   return (
     <html
       lang="zh-Hant"
-      className={`${inter.variable} ${geistMono.variable} h-full`}
+      className={`${inter.variable} ${plexSans.variable} ${geistMono.variable} h-full`}
     >
       <body className="min-h-full">
         <div className={layoutStyles.siteMain}>
