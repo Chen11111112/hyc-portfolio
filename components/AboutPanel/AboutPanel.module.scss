@@ -114,6 +114,14 @@
 
 .tableWrap {
   overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.tableWrap::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .table {
@@ -145,4 +153,10 @@
 .table td:nth-child(4) {
   white-space: normal;
   min-width: 12rem;
+}
+
+@media (max-width: 900px) {
+  .mark {
+    display: none;
+  }
 }

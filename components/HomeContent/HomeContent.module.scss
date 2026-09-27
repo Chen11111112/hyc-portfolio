@@ -164,8 +164,65 @@
 }
 
 @media (max-width: 900px) {
+  .page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .aboutWrap {
-    width: min(100%, 92vw);
-    height: 100vh;
+    position: relative;
+    top: auto;
+    left: auto;
+    order: 3;
+    z-index: 1;
+    width: 100%;
+    height: auto;
+    padding: 0.25rem 1.25rem 1.5rem;
+    background: transparent;
+    overflow: visible;
+    pointer-events: auto;
+  }
+
+  .brand {
+    position: relative;
+    order: 1;
+    right: auto;
+    bottom: auto;
+    z-index: 1;
+    display: block;
+    margin: 0;
+    padding: 1.15rem 1.25rem 0.2rem;
+    font-family: var(--font-mark), "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+    font-size: clamp(4.25rem, 22vw, 6.5rem);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 0.85;
+    color: #f4f4f5;
+  }
+
+  .cornerNav {
+    position: relative;
+    order: 4;
+    right: auto;
+    bottom: auto;
+    align-items: flex-start;
+    width: 100%;
+    gap: 0.85rem;
+    padding: 0.25rem 1.25rem 2.25rem;
+    pointer-events: auto;
+  }
+
+  .cornerTitle {
+    font-size: clamp(2.4rem, 12vw, 3.6rem);
+  }
+
+  .cornerLinks {
+    justify-content: flex-start;
+    gap: 1.15rem;
   }
 }

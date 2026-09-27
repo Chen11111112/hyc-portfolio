@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Project } from "@/lib/projects";
 import styles from "./ProjectCarousel.module.scss";
 
@@ -47,6 +47,11 @@ export default function ProjectCarousel({
     null,
   );
   const dragDistance = useRef(0);
+  const pendingId = useRef<string | null>(activeId);
+
+  useEffect(() => {
+    pendingId.current = activeId;
+  }, [activeId]);
 
   const slots = useMemo(
     () =>
@@ -83,9 +88,28 @@ export default function ProjectCarousel({
     dragStart.current = null;
   }, []);
 
-  const onLinkClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (dragDistance.current > 8) e.preventDefault();
-  }, []);
+  const blockRepeatNavigation = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      const id = e.currentTarget.getAttribute("href")?.split("/").pop() ?? null;
+      if (id && (id === activeId || id === pendingId.current)) {
+        e.preventDefault();
+        return;
+      }
+      pendingId.current = id;
+    },
+    [activeId],
+  );
+
+  const onLinkClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      if (dragDistance.current > 8) {
+        e.preventDefault();
+        return;
+      }
+      blockRepeatNavigation(e);
+    },
+    [blockRepeatNavigation],
+  );
 
   const onDragStart = useCallback((e: React.DragEvent<HTMLAnchorElement>) => {
     e.preventDefault();
@@ -117,6 +141,26 @@ export default function ProjectCarousel({
       className={styles.section}
       aria-label="專案輪播"
     >
+      <div className={styles.mobileStrip}>
+        {projects.map((project) => (
+          <Link
+            key={project.id}
+            href={`/projects/${project.id}`}
+            scroll={false}
+            className={`${styles.thumb}${activeId === project.id ? ` ${styles.thumbActive}` : ""}`}
+            aria-label={`查看作品：${project.title}`}
+            aria-current={activeId === project.id ? "true" : undefined}
+            onClick={blockRepeatNavigation}
+          >
+            <img
+              className={styles.thumbPhoto}
+              src={project.image}
+              alt=""
+              draggable={false}
+            />
+          </Link>
+        ))}
+      </div>
       <div className={styles.zone}>
         <div className={styles.stage}>
           {slots.map(({ project, stackIndex }) => {

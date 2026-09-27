@@ -91,7 +91,6 @@ const PROJECT_NAMES = [
   "校園活動系統",
   "智取時光 - 與三商家購合作",
   "使用 RAG 打造個人助理 – Scrum 助理",
-  "Next.j s框架下的全端開發示範專案",
 ];
 
 function splitDetailAndTech(rest: string): { detail: string; tech: string } {
