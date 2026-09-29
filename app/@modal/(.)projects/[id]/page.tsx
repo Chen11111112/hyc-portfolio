@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import ProjectDetailOverlay from "@/components/ProjectDetail/ProjectDetailOverlay";
-import { getProjectById, projects } from "@/lib/projects";
+import { getProjectById, getProjects } from "@/lib/projects";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -14,7 +14,7 @@ export default async function ProjectModalPage({ params }: Props) {
   return (
     <ProjectDetailOverlay
       project={project}
-      projects={projects}
+      projects={getProjects()}
       variant="modal"
     />
   );

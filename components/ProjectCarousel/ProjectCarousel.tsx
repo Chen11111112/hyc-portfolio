@@ -10,7 +10,6 @@ type Props = {
   activeId?: string | null;
 };
 
-const VISIBLE_SLOTS = 14.5;
 const DRAG_GAIN = 0.0048;
 
 function wrap(value: number, length: number) {
@@ -164,9 +163,8 @@ export default function ProjectCarousel({
       <div className={styles.zone}>
         <div className={styles.stage}>
           {slots.map(({ project, stackIndex }) => {
-            let pos = wrap(stackIndex + phase, projects.length);
-            if (pos > projects.length - 0.85) pos -= projects.length;
-            const t = pos / VISIBLE_SLOTS;
+            const pos = wrap(stackIndex + phase, projects.length);
+            const t = pos / Math.max(projects.length, 1);
             if (t < -0.28 || t > 1.05) return null;
 
             const { left, top } = positionAlongPath(t);

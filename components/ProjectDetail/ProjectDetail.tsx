@@ -53,7 +53,13 @@ function ActionLink({
   );
 }
 
-function DetailPanel({ project }: { project: Project }) {
+function DetailPanel({
+  project,
+  titleId,
+}: {
+  project: Project;
+  titleId?: string;
+}) {
   return (
     <div className={styles.slideInner}>
       <div className={styles.visual}>
@@ -70,32 +76,33 @@ function DetailPanel({ project }: { project: Project }) {
         </div>
       </div>
       <div className={styles.content}>
-        <h2 className={styles.title}>{project.title}</h2>
-        <p className={styles.description}>{project.description}</p>
-        <div className={styles.tech}>
-          {project.tech.map((t) => (
-            <span key={t} className={styles.chip}>
-              {t}
-            </span>
-          ))}
-        </div>
-        <div className={styles.actions}>
-          <ActionLink
-            href={project.liveUrl}
-            label="前往線上系統"
-            variant="primary"
-          />
-          <ActionLink
-            href={project.githubUrl}
-            label="查看 GitHub Repo"
-            variant="ghost"
-          />
-          <ActionLink
-            href={project.docsUrl}
-            label="查看系統文件"
-            variant="ghost"
-          />
-        </div>
+        <h2 id={titleId} className={styles.title}>
+          {project.title}
+        </h2>
+        {project.description ? (
+          <p className={styles.description}>{project.description}</p>
+        ) : null}
+        {project.tech.length > 0 && (
+          <div className={styles.tech}>
+            {project.tech.map((t) => (
+              <span key={t} className={styles.chip}>
+                {t}
+              </span>
+            ))}
+          </div>
+        )}
+        {project.links.length > 0 && (
+          <div className={styles.actions}>
+            {project.links.map((link, index) => (
+              <ActionLink
+                key={`${link.label}-${link.href}`}
+                href={link.href}
+                label={link.label}
+                variant={index === 0 ? "primary" : "ghost"}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -269,52 +276,7 @@ export default function ProjectDetail({
             {prev ? <DetailPanel project={prev} /> : null}
           </article>
           <article className={styles.slide}>
-            <div className={styles.slideInner}>
-              <div className={styles.visual}>
-                <div
-                  key={project.id}
-                  className={styles.imageFrame}
-                  style={{ "--accent": project.accent } as React.CSSProperties}
-                >
-                  <img
-                    className={styles.photo}
-                    src={project.image}
-                    alt=""
-                    draggable={false}
-                  />
-                </div>
-              </div>
-              <div className={styles.content}>
-                <h2 id="project-detail-title" className={styles.title}>
-                  {project.title}
-                </h2>
-                <p className={styles.description}>{project.description}</p>
-                <div className={styles.tech}>
-                  {project.tech.map((t) => (
-                    <span key={t} className={styles.chip}>
-                      {t}
-                    </span>
-                  ))}
-                </div>
-                <div className={styles.actions}>
-                  <ActionLink
-                    href={project.liveUrl}
-                    label="前往線上系統"
-                    variant="primary"
-                  />
-                  <ActionLink
-                    href={project.githubUrl}
-                    label="查看 GitHub Repo"
-                    variant="ghost"
-                  />
-                  <ActionLink
-                    href={project.docsUrl}
-                    label="查看系統文件"
-                    variant="ghost"
-                  />
-                </div>
-              </div>
-            </div>
+            <DetailPanel project={project} titleId="project-detail-title" />
           </article>
           <article className={styles.slide} aria-hidden={!next}>
             {next ? <DetailPanel project={next} /> : null}

@@ -1,6 +1,6 @@
 import AboutPanel from "@/components/AboutPanel/AboutPanel";
 import ProjectCarouselWrapper from "@/components/ProjectCarousel/ProjectCarouselWrapper";
-import { projects } from "@/lib/projects";
+import { getProjects } from "@/lib/projects";
 import styles from "./HomeContent.module.scss";
 
 type Props = {
@@ -8,6 +8,7 @@ type Props = {
 };
 
 export default function HomeContent({ activeProjectId = null }: Props) {
+  const projects = getProjects();
   return (
     <div className={styles.page}>
       <div className={styles.aboutWrap} data-about>
