@@ -2,23 +2,8 @@
 
 我是陳泓毓。 我還在成為企業家的這條路上。
 
-我精通以下技術，具備實務開發與應用經驗，並持續精進相關技術，深化專業能力與技術實力。
+我精通網頁全端技術，具備實務開發與應用經驗，並持續精進組織管理相關能力，深化管理能力與專業技術實力。
 
-Scrum / Agile Project Management
-
-Next.js / React
-
-TypeScript
-
-C++
-
-Python
-
-Java
-
-Flask
-
-Django
 
 經歷
 
@@ -88,21 +73,20 @@ React 前端框架基礎 課程 | 2025
 
 專業證照
 
-Scrum Master 敏捷式管理教練證照
-
-APCS 觀念:3級分 | 實作:2級分
-
-Gemini 認證講師 ( Gemini Certified Educator )
+PSM I 專業級 Scrum 教練認證, Professional Scrum Master I 
+PSPO I 專業級 Scrum 產品負責人認證, Professional Scrum Product Owner I 
+PAL I 專業級 Agile 領導認證, Professional Agile Leadership I
+PSU I 專業 Scrum 與用戶體驗認證, Professional Scrum with User Experience I
 
 興趣證照
 
-CSIA滑雪教練證照
+CSIA 加拿大滑雪教練聯盟一級指導員
 
-JLPT日語檢定 N3通過
+JLPT 日語檢定 N3通過
 
 基礎證照
 
-Gemini認證大專院校學生 ( Gemini University Student )
+Gemini 認證講師 ( Gemini Certified Educator )
 
 會計丙級檢定
 

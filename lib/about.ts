@@ -3,13 +3,10 @@ import path from "path";
 
 const HEADINGS = new Set([
   "自我介紹",
-  "經歷",
   "專案經歷",
   "競賽經歷",
-  "教學經歷",
   "志工經歷",
   "興趣經歷",
-  "證照",
   "專業證照",
   "興趣證照",
   "基礎證照",
@@ -34,6 +31,7 @@ export function parseAboutSections(raw: string): AboutSection[] {
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed) continue;
+    if (trimmed === "經歷" || trimmed === "證照") continue;
 
     if (HEADINGS.has(trimmed)) {
       current = { heading: trimmed, lines: [] };
@@ -51,8 +49,28 @@ export function parseAboutSections(raw: string): AboutSection[] {
   return sections;
 }
 
+const SECTION_ORDER = [
+  "自我介紹",
+  "專案經歷",
+  "專業證照",
+  "競賽經歷",
+  "教學經歷",
+  "研習講師",
+  "志工經歷",
+  "興趣經歷",
+  "興趣證照",
+  "基礎證照",
+];
+
 export function getAboutSections(): AboutSection[] {
-  return parseAboutSections(getAboutRaw());
+  const rank = (heading: string) => {
+    const i = SECTION_ORDER.indexOf(heading);
+    return i === -1 ? SECTION_ORDER.length : i;
+  };
+  return parseAboutSections(getAboutRaw())
+    .map((section, index) => ({ section, index }))
+    .sort((a, b) => rank(a.section.heading) - rank(b.section.heading) || a.index - b.index)
+    .map(({ section }) => section);
 }
 
 export function getIntroLead(): string {
