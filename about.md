@@ -77,12 +77,8 @@ PSM I 專業級 Scrum 教練認證, Professional Scrum Master I
 PSPO I 專業級 Scrum 產品負責人認證, Professional Scrum Product Owner I 
 PAL I 專業級 Agile 領導認證, Professional Agile Leadership I
 PSU I 專業 Scrum 與用戶體驗認證, Professional Scrum with User Experience I
-
-興趣證照
-
 CSIA 加拿大滑雪教練聯盟一級指導員
-
-JLPT 日語檢定 N3通過
+JLPT N3 日本語能力試驗
 
 基礎證照
 
