@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import HomeContent from "@/components/HomeContent/HomeContent";
-import { getProjectById } from "@/lib/projects";
+import { getProjectById, getProjects } from "@/lib/projects";
 
 type Props = {
   params: Promise<{ id: string }>;
 };
 
 export function generateStaticParams() {
-  return projects.map((p) => ({ id: p.id }));
+  return getProjects().map((p) => ({ id: p.id }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
