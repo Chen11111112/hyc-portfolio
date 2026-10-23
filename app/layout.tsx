@@ -12,6 +12,7 @@ import {
   SITE_URL,
 } from "@/lib/site";
 import "./globals.scss";
+import { WebVitals } from "@/components/WebVitals"
 
 const inter = Inter({
   variable: "--font-sans",
@@ -111,6 +112,7 @@ export default function RootLayout({
         />
         <div className={layoutStyles.siteMain}>
           <PageEnter>
+            <WebVitals/>
             {children}
             {modal}
           </PageEnter>
