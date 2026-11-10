@@ -1,5 +1,5 @@
-import HomeContent from "@/components/HomeContent/HomeContent";
+import RoomCanvas from "@/components/Room/RoomCanvas";
 
 export default function Home() {
-  return <HomeContent />;
+  return <RoomCanvas />;
 }

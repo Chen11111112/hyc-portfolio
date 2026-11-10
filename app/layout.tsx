@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Inter } from "next/font/google";
 import localFont from "next/font/local";
+import BootScreen from "@/components/BootScreen/BootScreen";
 import PageEnter from "@/components/PageEnter/PageEnter";
 import layoutStyles from "./layout.module.scss";
 import {
@@ -105,12 +106,13 @@ export default function RootLayout({
       lang="zh-Hant"
       className={`${inter.variable} ${plexSans.variable} ${geistMono.variable} h-full`}
     >
-      <body className="min-h-full">
+      <body className="min-h-full" suppressHydrationWarning>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <div className={layoutStyles.siteMain}>
+          <BootScreen />
           <PageEnter>
             <WebVitals/>
             {children}
