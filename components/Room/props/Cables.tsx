@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo } from "react";
 import { CatmullRomCurve3, TubeGeometry, Vector3 } from "three";
-import { DESK, DESK_CX, type Vec3 } from "../layout";
+import { DESK, DESK_CX, SHEET_CAB, type Vec3 } from "../layout";
 import { RISER } from "./DeskItems";
-import { CAB } from "./Instruments";
+import { BASE_R, FAN_POS, FAN_YAW } from "./DysonFan";
 import { Box } from "./primitives";
 
 // Wall outlets and the power cables running to them.
@@ -13,10 +13,12 @@ const FACE_Z = PLATE.z + PLATE.t / 2;
 const PLUG_Z = FACE_Z + 0.012;
 
 const STEP = PLATE.w + PLATE.gap;
-/** Three plates behind the monitor riser, plus one low on the wall under the LEGO piano cabinet. */
+/** Three plates behind the monitor riser, plus one low on the wall just right of the sheet cabinet. */
 const DESK_OUTLETS: Vec3[] = [0, 1, 2].map((i) => [DESK_CX - STEP + i * STEP, DESK.top + 0.15, PLATE.z]);
-const PIANO_OUTLET: Vec3 = [(CAB.x0 + CAB.x1) / 2, 0.065, PLATE.z];
-const OUTLETS = [...DESK_OUTLETS, PIANO_OUTLET];
+const FLOOR_OUTLET: Vec3 = [SHEET_CAB.x0 + SHEET_CAB.w + 0.05, 0.065, PLATE.z];
+/** Back of the fan base, where its cable leaves. */
+const FAN_TAIL: Vec3 = [FAN_POS[0] + BASE_R * Math.sin(FAN_YAW + Math.PI), 0.012, FAN_POS[2] + BASE_R * Math.cos(FAN_YAW + Math.PI)];
+const OUTLETS = [...DESK_OUTLETS, FLOOR_OUTLET];
 
 function OutletPlate({ position }: { position: Vec3 }) {
   return (
@@ -95,13 +97,13 @@ const ROUTES: { points: Vec3[]; outlet: Vec3; color?: string }[] = [
     ],
   },
   {
-    // Dyson tower fan → outlet under the LEGO piano cabinet, along the floor between the cabinet legs.
-    outlet: PIANO_OUTLET,
+    // Dyson tower fan → low outlet right of the sheet cabinet, along the floor in front of the cabinet.
+    outlet: FLOOR_OUTLET,
     points: [
-      [DESK.x1 + 0.31, 0.012, 0.847],
-      [DESK.x1 + 0.3, 0.003, 0.6],
-      [DESK.x1 + 0.27, 0.003, 0.2],
-      [PIANO_OUTLET[0], 0.006, 0.06],
+      FAN_TAIL,
+      [FAN_TAIL[0] + 0.08, 0.003, FAN_TAIL[2] - 0.2],
+      [FLOOR_OUTLET[0] - 0.04, 0.003, 0.25],
+      [FLOOR_OUTLET[0], 0.006, 0.06],
     ],
   },
 ];

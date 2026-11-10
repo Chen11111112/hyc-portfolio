@@ -1,17 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, type ReactNode } from "react";
+import { useEffect, useMemo } from "react";
 import { DoubleSide, ExtrudeGeometry, Shape } from "three";
-import { DESK, type Vec3 } from "../layout";
+import { SHEET_CAB, SHEET_CAB_CX, type Vec3 } from "../layout";
 import { Box, Cyl, Mat, Rod } from "./primitives";
 
 /* ------------------------------------------------------------------ */
-/* LEGO grand piano on a low white cabinet, just right of the desk.    */
+/* LEGO grand piano (sits on the sheet-music cabinet).                 */
 /* ------------------------------------------------------------------ */
 
-export const CAB = { x0: DESK.x1 + 0.04, x1: DESK.x1 + 0.46, z0: 0.03, z1: 0.43, h: 0.46 };
-const CAB_LEG = 0.12;
-export const CAB_TOP = CAB.h;
 const LEGO_BLACK = { color: "#0e0e10", roughness: 0.28, metalness: 0.05 };
 
 function pianoShape(w: number, l: number) {
@@ -42,29 +39,13 @@ function useExtrude(shape: Shape, depth: number, bevel = 0) {
   return geo;
 }
 
-function PianoCabinet() {
-  const w = CAB.x1 - CAB.x0;
-  const d = CAB.z1 - CAB.z0;
-  const cx = (CAB.x0 + CAB.x1) / 2;
-  const cz = (CAB.z0 + CAB.z1) / 2;
-  return (
-    <group>
-      {/* Raised on short legs so the wall outlet underneath stays reachable. */}
-      <Box size={[w, CAB.h - CAB_LEG, d]} position={[cx, CAB_LEG + (CAB.h - CAB_LEG) / 2, cz]} color="#ebe7e0" roughness={0.75} />
-      {[
-        [CAB.x0 + 0.025, CAB.z0 + 0.025],
-        [CAB.x1 - 0.025, CAB.z0 + 0.025],
-        [CAB.x0 + 0.025, CAB.z1 - 0.025],
-        [CAB.x1 - 0.025, CAB.z1 - 0.025],
-      ].map(([x, z]) => (
-        <Box key={`${x}${z}`} size={[0.028, CAB_LEG, 0.028]} position={[x, CAB_LEG / 2, z]} color="#d9d4cb" roughness={0.6} />
-      ))}
-      <Box size={[w - 0.02, 0.003, 0.002]} position={[cx, CAB.h * 0.55, CAB.z1 + 0.001]} color="#cfc9bf" roughness={0.8} cast={false} />
-    </group>
-  );
-}
+/** Scaled up to roughly turntable size, like the real set. */
+const PIANO_SCALE = 1.15;
+/** Keyboard-front centre on the cabinet's right half; the keys overhang the front edge slightly. */
+export const PIANO_POS: Vec3 = [SHEET_CAB_CX + 0.24, SHEET_CAB.h, 0.39];
 
-function LegoPiano() {
+/** LEGO grand piano on the sheet cabinet, right of the turntable. */
+export function LegoPiano() {
   const W = 0.25;
   const L = 0.34;
   const bodyH = 0.07;
@@ -84,8 +65,9 @@ function LegoPiano() {
   const propX = W * 0.78;
   return (
     <group
-      position={[(CAB.x0 + CAB.x1) / 2 + 0.01, CAB.h, (CAB.z0 + CAB.z1) / 2 + 0.11]}
-      rotation={[0, -0.35, 0]}
+      position={PIANO_POS}
+      rotation={[0, 0, 0]}
+      scale={PIANO_SCALE}
     >
       <group position={[-W / 2, 0, 0]}>
         {/* Case: shape lies in XY, extrude upward (+Z → +Y) with the tail toward the wall. */}
@@ -167,7 +149,7 @@ type GuitarSpec = {
 /** Wall-hung guitars; `position[0]` is the x along the back wall (y and z come from the hangers). */
 const GUITARS: { spec: GuitarSpec; position: Vec3; yaw: number }[] = [
   {
-    position: [DESK.x1 + 1.15, 0, 0],
+    position: [SHEET_CAB_CX - 0.225, 0, 0],
     yaw: 0.42,
     spec: {
       kind: "jazz",
@@ -186,7 +168,7 @@ const GUITARS: { spec: GuitarSpec; position: Vec3; yaw: number }[] = [
     },
   },
   {
-    position: [DESK.x1 + 1.6, 0, 0],
+    position: [SHEET_CAB_CX + 0.225, 0, 0],
     yaw: 0.3,
     spec: {
       kind: "classical",
@@ -392,12 +374,3 @@ export function Guitars() {
   );
 }
 
-/** Cabinet + piano; `children` lets the caller wrap just the piano (e.g. to make it clickable). */
-export function PianoCorner({ children }: { children: (piano: ReactNode) => ReactNode }) {
-  return (
-    <group>
-      <PianoCabinet />
-      {children(<LegoPiano />)}
-    </group>
-  );
-}

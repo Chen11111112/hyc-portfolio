@@ -1,9 +1,9 @@
 "use client";
 
 import { ContactShadows, Environment, OrbitControls, RoundedBox } from "@react-three/drei";
-import { Canvas, useThree } from "@react-three/fiber";
-import { Component, Suspense, useEffect, useLayoutEffect, useMemo, useRef, type MutableRefObject, type ReactNode } from "react";
-import { CanvasTexture, DoubleSide, InstancedMesh, Object3D, PerspectiveCamera, SRGBColorSpace, Vector3, type DirectionalLight } from "three";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Component, Suspense, useEffect, useLayoutEffect, useRef, useState, type MutableRefObject, type ReactNode } from "react";
+import { Color, DoubleSide, InstancedMesh, Object3D, PerspectiveCamera, Vector3, type DirectionalLight, type HemisphereLight } from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { markBootReady } from "@/lib/boot";
 import {
@@ -20,7 +20,8 @@ import {
   SHELF_W,
   SHELF_X0,
   SHELF_Z0,
-  rng,
+  SHEET_CAB,
+  SHEET_CAB_CX,
   type Vec3,
 } from "./layout";
 import { DeskBooks, ShelfContents } from "./props/Books";
@@ -37,21 +38,25 @@ import {
   PenHolder,
   Phone,
   Speaker,
+  StationeryBasket,
   Tablet,
 } from "./props/DeskItems";
 import GamingChair from "./props/GamingChair";
-import { CAB_TOP, Guitars, PianoCorner } from "./props/Instruments";
+import { Guitars, LegoPiano, PIANO_POS } from "./props/Instruments";
 import Marimba, { MARIMBA_X0, MARIMBA_X1 } from "./props/Marimba";
 import DysonFan from "./props/DysonFan";
 import MidiKeyboard from "./props/MidiKeyboard";
 import { Box } from "./props/primitives";
-import SheetCabinet, { SHEET_CABINET_W } from "./props/SheetCabinet";
+import SheetCabinet from "./props/SheetCabinet";
 import Skis, { SKIS_CX } from "./props/Skis";
+import WoodFloor from "./props/WoodFloor";
+import SkyView from "./props/SkyView";
 import Outlets from "./props/Cables";
 import PegboardPhotos from "./props/PegboardPhotos";
 import Plants from "./props/Plants";
 import Posters from "./props/Posters";
 import Clickable from "./Clickable";
+import { NightProvider, lerp, readStoredNight, storeNight, useNightMix } from "./nightMode";
 import styles from "./Room.module.scss";
 
 class Optional extends Component<{ children: ReactNode }, { on: boolean }> {
@@ -64,7 +69,9 @@ class Optional extends Component<{ children: ReactNode }, { on: boolean }> {
   }
 }
 
-const WOOD = "#e8e4dc";
+// Desk colour (dark, swapped from the original light desk). The floor is light oak planks (WoodFloor).
+const WOOD = "#5a3a28";
+const FLOOR_SIZE: [number, number] = [12, 14];
 const SHELF_WOOD = "#e4d3b4";
 
 const CABINET_W = 0.4;
@@ -80,29 +87,36 @@ const LEG_T = 0.02;
 const LEG_X0 = DESK.x1 - LEG_T;
 
 
+/** Top of the side-wall window opening (kept in sync with WIN.y1 below). */
+const WIN_TOP = 2.45;
 const LOOK: Vec3 = [DESK_CX + 0.3, DESK.top + 0.2, DESK.z0 + DESK.depth / 2];
 const ELEVATION = (26 * Math.PI) / 180;
 const AZIMUTH = Math.PI / 4;
-/** After fitting the whole corner in view, pull the camera in by this factor so the desk dominates. */
-const CLOSE_UP = 0.78;
+/** Camera never rises above this (walls are 4 m), so it can't look over the wall tops. */
+const MAX_CAMERA_Y = 3.85;
+/**
+ * After fitting the whole corner in view, pull the camera in by this factor so the desk dominates and
+ * little bare wall shows. This is also the zoom-out limit (controls.maxDistance = home distance).
+ */
+const CLOSE_UP = 0.65;
 
 const FRAME = [
-  // Side wall: upright MIDI keyboard, marimba, sheet cabinet + turntable
-  [0.7, 0, 3.0],
-  [0.7, 0.9, 3.6],
-  [-0.21, 1.4, 3.45],
-  // Guitars (right of piano)
-  [DESK.x1 + 1.8, 0.75, 0.15],
-  [DESK.x1 + 1.9, 1.98, 0.1],
-  [DESK.x1 + 1.9, 0, 0.5],
-  // Posters above the guitars
-  [DESK.x1 + 2.2, 2.3, 0.0],
+  // Side wall: upright MIDI keyboard + marimba
+  [0.7, 0, 3.5],
+  [0.7, 0.9, 3.85],
+  [-0.21, 1.4, 3.85],
+  // Back wall right edge: skis and the end of the poster wall (nothing beyond them is framed)
+  [DESK.x1 + 1.5, 0, 0.3],
+  [DESK.x1 + 1.52, 1.8, 0.0],
+  // Poster wall top row (starts at the pegboard's left edge)
+  [DESK.x1 + 1.2, 2.26, 0.0],
+  [PEG_X0, 2.26, 0.0],
   // Gaming chair
   [0.2, 0, 1.5],
   [0.5, 1.3, 1.35],
   // Window on the side wall
-  [-0.21, 2.15, 1.65],
-  [-0.21, 2.15, 0.0],
+  [-0.21, WIN_TOP, 1.9],
+  [-0.21, WIN_TOP, 0.0],
   [-0.2, 1.3, 0.192],
   [PEG_X0 + PEG_W, PEG_Y0 + PEG_H, 0.016],
   [DESK.x0, DESK.top, DESK_Z1],
@@ -139,6 +153,9 @@ function CameraRig({ resetRef }: { resetRef: MutableRefObject<(() => void) | nul
       if (inside) break;
     }
     dist *= CLOSE_UP;
+    // On portrait/narrow screens the fit would back the camera out (and up) past the wall tops;
+    // cap it by height instead and let the sides crop — visitors can orbit/zoom to the rest.
+    dist = Math.min(dist, (MAX_CAMERA_Y - look.y) / offset.y);
     camera.position.copy(look).addScaledVector(offset, dist);
     camera.lookAt(look);
     camera.updateMatrixWorld();
@@ -146,7 +163,8 @@ function CameraRig({ resetRef }: { resetRef: MutableRefObject<(() => void) | nul
     if (controls) {
       // Zoom heads toward the cursor, so allow getting right up close to any prop.
       controls.minDistance = 0.25;
-      controls.maxDistance = dist * 1.35;
+      // Never further out than the home view, so the bare wall ends beyond the L stay out of frame.
+      controls.maxDistance = dist;
       controls.target.copy(look);
       controls.update();
     }
@@ -163,17 +181,37 @@ function CameraRig({ resetRef }: { resetRef: MutableRefObject<(() => void) | nul
   return null;
 }
 
+/**
+ * Low late-afternoon sun (~16° elevation) coming in through the side-wall window, aimed so the patch
+ * lands on the notebook at the right of the desk. The ray enters mid-glass of one sash (z ≈ 1.2, clear of
+ * the meeting stiles) about 1.3 m up, below the blind, and passes over the tablet, laptop and chair arms.
+ */
+const SUN_TARGET: Vec3 = [DESK.x1 - 0.24, DESK.top, 0.56];
+const SUN_DIR = new Vector3(1.77, -0.55, -0.64).normalize();
+const SUN_POS: Vec3 = new Vector3(...SUN_TARGET).addScaledVector(SUN_DIR, -8).toArray() as Vec3;
+
+const SUN_DAY = new Color("#fff4e0");
+const MOON = new Color("#9fb4ff");
+
 function Sun() {
   const light = useRef<DirectionalLight>(null);
   const target = useRef<Object3D>(null);
+  const mix = useNightMix();
   useLayoutEffect(() => {
     if (light.current && target.current) light.current.target = target.current;
   }, []);
+  // Night: the same direction becomes faint, cool moonlight through the window.
+  useFrame(() => {
+    const l = light.current;
+    if (!l) return;
+    l.intensity = lerp(3.2, 0.4, mix.current);
+    l.color.lerpColors(SUN_DAY, MOON, mix.current);
+  });
   return (
     <>
       <directionalLight
         ref={light}
-        position={[-4.48, 5.55, 2.4]}
+        position={SUN_POS}
         color="#fff4e0"
         intensity={3.2}
         castShadow
@@ -188,7 +226,7 @@ function Sun() {
         shadow-bias={-0.0004}
         shadow-normalBias={0.012}
       />
-      <object3D ref={target} position={[0.4, 0.75, 0.4]} />
+      <object3D ref={target} position={SUN_TARGET} />
     </>
   );
 }
@@ -199,11 +237,11 @@ function Sun() {
  *
  * Side-wall props are authored as if on a back wall (wall face z = 0, room toward +z, window opening
  * WIN) and then rotated a quarter turn into place by <SideWallGroup>: local x → world −z,
- * local z → world +x. So the window lands at world z ∈ [0.15, 1.65], starting right above the desk's left end.
+ * local z → world +x. So the window lands at world z ∈ [0.15, 1.9], starting right above the desk's left end.
  */
 const SIDE_X = DESK.x0 - 0.01;
 /** Window opening on the side wall, in side-wall-local coords. */
-const WIN = { x0: -1.65, x1: -0.15, y0: 0.8, y1: 2.15 };
+const WIN = { x0: -1.9, x1: -0.15, y0: 0.8, y1: WIN_TOP };
 const WALL_T = 0.06;
 
 function SideWallGroup({ children }: { children: ReactNode }) {
@@ -221,19 +259,6 @@ function BackWall() {
     <mesh position={[(x0 + x1) / 2, 2, -WALL_T / 2]} castShadow receiveShadow>
       <boxGeometry args={[x1 - x0, 4, WALL_T]} />
       <meshStandardMaterial color="#dfe5ea" roughness={0.9} metalness={0} />
-    </mesh>
-  );
-}
-
-/**
- * Invisible lid over the room: writes into the sun's shadow map only, so daylight enters through the
- * window rather than over the top of the open-topped walls.
- */
-function ShadowCeiling() {
-  return (
-    <mesh position={[SIDE_X + 6, 4.03, 7]} castShadow>
-      <boxGeometry args={[12, 0.05, 14]} />
-      <meshBasicMaterial colorWrite={false} depthWrite={false} />
     </mesh>
   );
 }
@@ -258,48 +283,6 @@ function Wall() {
         </mesh>
       ))}
     </group>
-  );
-}
-
-/** Daytime view behind the window: soft sky gradient with a hazy skyline. */
-function Outdoors() {
-  const texture = useMemo(() => {
-    const c = document.createElement("canvas");
-    c.width = 256;
-    c.height = 256;
-    const ctx = c.getContext("2d");
-    if (ctx) {
-      const g = ctx.createLinearGradient(0, 0, 0, 256);
-      g.addColorStop(0, "#8fc3ec");
-      g.addColorStop(0.55, "#d3e9f7");
-      g.addColorStop(1, "#f6f0e2");
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, 256, 256);
-      ctx.fillStyle = "rgba(255,255,255,0.75)";
-      [[60, 52, 34], [150, 70, 26], [205, 40, 20]].forEach(([x, y, r]) => {
-        ctx.beginPath();
-        ctx.ellipse(x, y, r * 1.8, r * 0.55, 0, 0, Math.PI * 2);
-        ctx.fill();
-      });
-      const rand = rng(5);
-      ctx.fillStyle = "rgba(150,170,185,0.55)";
-      for (let x = 0; x < 256; ) {
-        const w = 14 + rand() * 26;
-        const h = 30 + rand() * 70;
-        ctx.fillRect(x, 256 - h, w, h);
-        x += w + 2;
-      }
-    }
-    const t = new CanvasTexture(c);
-    t.colorSpace = SRGBColorSpace;
-    return t;
-  }, []);
-  useEffect(() => () => texture.dispose(), [texture]);
-  return (
-    <mesh position={[(WIN.x0 + WIN.x1) / 2, 1.5, -1.8]}>
-      <planeGeometry args={[4.4, 3.3]} />
-      <meshBasicMaterial map={texture} toneMapped={false} />
-    </mesh>
   );
 }
 
@@ -383,6 +366,30 @@ function RollerBlind() {
   );
 }
 
+const DRAWER_FRONT = "#6e4a33";
+/** Centre drawer: starts just right of the drawer cabinet. */
+/** Row of shallow drawers under the desktop, spanning from the cabinet to the right leg. */
+const APRON = { x0: DESK.x0 + CABINET_W + SEAM, x1: LEG_X0 - SEAM, count: 3, h: 0.08, back: DESK.z0 + 0.2 };
+const APRON_W = (APRON.x1 - APRON.x0) / APRON.count;
+
+/** Brushed-metal bar pull on a drawer front at depth `z` (front face), centred at height `y`. */
+function DrawerPull({ z, y, width }: { z: number; y: number; width: number }) {
+  return (
+    <group position={[0, y, z]}>
+      <mesh position={[0, 0, 0.014]} rotation={[0, 0, Math.PI / 2]} castShadow>
+        <cylinderGeometry args={[0.0055, 0.0055, width, 12]} />
+        <meshStandardMaterial color="#c3c6ca" roughness={0.3} metalness={0.85} />
+      </mesh>
+      {[-1, 1].map((s) => (
+        <mesh key={s} position={[s * (width / 2 - 0.012), 0, 0.007]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.004, 0.004, 0.014, 10]} />
+          <meshStandardMaterial color="#c3c6ca" roughness={0.3} metalness={0.85} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 function Desk() {
   const drawers = [0, 1, 2, 3].map((i) => {
     const y0 = i * (DRAWER_H + SEAM);
@@ -404,13 +411,33 @@ function Desk() {
         <boxGeometry args={[CABINET_W, UNDER, PANEL_Z0 - 0.001 - DESK.z0]} />
         <meshStandardMaterial color={WOOD} roughness={0.74} metalness={0} />
       </mesh>
+      {/* Drawer stack: fronts a shade warmer than the carcass so the seams read, each with a bar pull. */}
       {drawers.map((y) => (
-        <mesh key={y} position={[DESK.x0 + CABINET_W / 2, y, (PANEL_Z0 + PANEL_Z1) / 2]} castShadow receiveShadow>
-          <boxGeometry args={[CABINET_W - SEAM * 2, DRAWER_H, PANEL_T]} />
-          <meshStandardMaterial color={WOOD} roughness={0.7} metalness={0} />
-        </mesh>
+        <group key={y} position={[DESK.x0 + CABINET_W / 2, y, 0]}>
+          <mesh position={[0, 0, (PANEL_Z0 + PANEL_Z1) / 2]} castShadow receiveShadow>
+            <boxGeometry args={[CABINET_W - SEAM * 2, DRAWER_H, PANEL_T]} />
+            <meshStandardMaterial color={DRAWER_FRONT} roughness={0.66} metalness={0} />
+          </mesh>
+          <DrawerPull z={PANEL_Z1} y={DRAWER_H * 0.22} width={0.12} />
+        </group>
       ))}
-      {/* Knee space between the drawer cabinet and the right leg is left open. */}
+      {/* Shallow drawers across the whole underside of the desktop: one carcass, three fronts. */}
+      <group position={[0, UNDER - APRON.h / 2 - 0.004, 0]}>
+        <mesh position={[(APRON.x0 + APRON.x1) / 2, 0.002, (APRON.back + PANEL_Z0) / 2]} castShadow receiveShadow>
+          <boxGeometry args={[APRON.x1 - APRON.x0, APRON.h + 0.004, PANEL_Z0 - APRON.back]} />
+          <meshStandardMaterial color={WOOD} roughness={0.74} metalness={0} />
+        </mesh>
+        {Array.from({ length: APRON.count }, (_, i) => (
+          <group key={i} position={[APRON.x0 + APRON_W * (i + 0.5), 0, 0]}>
+            <mesh position={[0, 0, (PANEL_Z0 + PANEL_Z1) / 2]} castShadow receiveShadow>
+              <boxGeometry args={[APRON_W - SEAM * 2, APRON.h, PANEL_T]} />
+              <meshStandardMaterial color={DRAWER_FRONT} roughness={0.66} metalness={0} />
+            </mesh>
+            <DrawerPull z={PANEL_Z1} y={0} width={0.14} />
+          </group>
+        ))}
+      </group>
+      {/* Right leg; the knee space under the drawer row stays open. */}
       <mesh position={[(LEG_X0 + DESK.x1) / 2, UNDER / 2, DESK.z0 + (DESK.depth - 0.04) / 2]} castShadow receiveShadow>
         <boxGeometry args={[LEG_T, UNDER, DESK.depth - 0.04]} />
         <meshStandardMaterial color={WOOD} roughness={0.74} metalness={0} />
@@ -473,10 +500,87 @@ function Pegboard() {
 }
 
 /** Keeps the orbit target inside the room so panning can't wander off past the walls. */
-const TARGET_MIN = new Vector3(SIDE_X + 0.1, 0.15, 0.05);
-const TARGET_MAX = new Vector3(DESK.x1 + 2.2, 2.0, 2.6);
+const TARGET_MIN = new Vector3(SIDE_X + 0.15, 0.2, 0.05);
+const TARGET_MAX = new Vector3(DESK.x1 + 1.35, 1.8, 2.5);
+const LOOK_V = new Vector3(...LOOK);
+/** Fraction of the zoom range (from fully out) over which panning freedom ramps up to the full room. */
+const PAN_RAMP = 0.55;
+const MIN_POLAR = 0.5;
 
-function Room({ resetRef }: { resetRef: MutableRefObject<(() => void) | null> }) {
+const DAY_BG = new Color("#dfe5ea");
+const NIGHT_BG = new Color("#0f121a");
+
+function SceneBackground() {
+  const bg = useRef<Color>(null);
+  const mix = useNightMix();
+  useFrame(() => {
+    bg.current?.lerpColors(DAY_BG, NIGHT_BG, mix.current);
+  });
+  return <color ref={bg} attach="background" args={["#dfe5ea"]} />;
+}
+
+const HEMI_SKY_DAY = new Color("#f3f6fb");
+const HEMI_SKY_NIGHT = new Color("#6c7aa8");
+
+const SKY_TARGET: Vec3 = [1.2, 0.4, 1.0];
+/**
+ * High above the room's open front (no wall there to block it), so every prop is lit and drops a soft
+ * shadow back onto the walls and desk behind it, which reads as depth from the camera's side.
+ */
+const SKY_DIR = new Vector3(0.6, 3.5, 1.6).normalize();
+const SKY_POS: Vec3 = new Vector3(...SKY_TARGET).addScaledVector(SKY_DIR, 9).toArray() as Vec3;
+
+/**
+ * Daylight bouncing around the room. The hemisphere gives an even base; the "skylight" is a soft,
+ * shadow-casting light from high above the open front so every prop gets a shaded side and a soft
+ * shadow (otherwise only the sun patch has any). By night both drop away and the lamp carries the scene.
+ */
+function FillLights() {
+  const hemi = useRef<HemisphereLight>(null);
+  const fill = useRef<DirectionalLight>(null);
+  const sky = useRef<DirectionalLight>(null);
+  const skyTarget = useRef<Object3D>(null);
+  const mix = useNightMix();
+  useLayoutEffect(() => {
+    if (sky.current && skyTarget.current) sky.current.target = skyTarget.current;
+  }, []);
+  useFrame(() => {
+    const m = mix.current;
+    if (hemi.current) {
+      hemi.current.intensity = lerp(0.7, 0.22, m);
+      hemi.current.color.lerpColors(HEMI_SKY_DAY, HEMI_SKY_NIGHT, m);
+    }
+    if (fill.current) fill.current.intensity = lerp(0.4, 0.06, m);
+    if (sky.current) sky.current.intensity = lerp(1.05, 0, m);
+  });
+  return (
+    <>
+      <hemisphereLight ref={hemi} args={["#f3f6fb", "#7b5b45", 0.7]} />
+      <directionalLight ref={fill} position={[3.5, 2.6, 4.5]} color="#f6f1ea" intensity={0.4} />
+      <directionalLight
+        ref={sky}
+        position={SKY_POS}
+        color="#eef3ff"
+        intensity={1.05}
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-near={1}
+        shadow-camera-far={16}
+        shadow-camera-left={-4.5}
+        shadow-camera-right={4.5}
+        shadow-camera-top={4.5}
+        shadow-camera-bottom={-4.5}
+        shadow-bias={-0.0006}
+        shadow-normalBias={0.02}
+        shadow-radius={6}
+      />
+      <object3D ref={skyTarget} position={SKY_TARGET} />
+    </>
+  );
+}
+
+function Room({ resetRef, night }: { resetRef: MutableRefObject<(() => void) | null>; night: boolean }) {
   const controlsRef = useRef<OrbitControlsImpl>(null);
   useEffect(() => {
     markBootReady();
@@ -484,29 +588,32 @@ function Room({ resetRef }: { resetRef: MutableRefObject<(() => void) | null> })
   const clampTarget = () => {
     const c = controlsRef.current;
     if (!c) return;
+    // Panning freedom grows as you zoom in: at the home distance the target is pinned to the home view,
+    // close up it can roam the whole room. Zooming back out eases the view back to home.
+    const d = c.object.position.distanceTo(c.target);
+    const t = Math.min(1, Math.max(0, (c.maxDistance - d) / (c.maxDistance * PAN_RAMP)));
+    const lo = LOOK_V.clone().lerp(TARGET_MIN, t);
+    const hi = LOOK_V.clone().lerp(TARGET_MAX, t);
     const before = c.target.clone();
-    c.target.clamp(TARGET_MIN, TARGET_MAX);
+    c.target.clamp(lo, hi);
     // Shift the camera by the same amount so clamping doesn't swing the view.
     c.object.position.add(c.target.clone().sub(before));
+    // Height cap: camera y = target.y + d·cos(polar) ≤ MAX_CAMERA_Y  ⇒  polar ≥ acos((MAX − target.y) / d).
+    const ratio = (MAX_CAMERA_Y - c.target.y) / Math.max(d, 1e-3);
+    c.minPolarAngle = ratio >= 1 ? MIN_POLAR : Math.max(MIN_POLAR, Math.acos(Math.max(-1, ratio)));
   };
   return (
-    <>
-      <color attach="background" args={["#dfe5ea"]} />
+    <NightProvider night={night}>
+      <SceneBackground />
       <CameraRig resetRef={resetRef} />
       <Sun />
-      {/* Daylight bouncing around the room — keeps shaded faces readable without the HDR environment. */}
-      <hemisphereLight args={["#f3f6fb", "#7b5b45", 1.1]} />
-      <directionalLight position={[3.5, 2.6, 4.5]} color="#f6f1ea" intensity={0.55} />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[SIDE_X + 6, 0, 7]} receiveShadow>
-        <planeGeometry args={[12, 14]} />
-        <meshStandardMaterial color="#5a3a28" roughness={0.86} metalness={0} />
-      </mesh>
+      <FillLights />
+      <WoodFloor position={[SIDE_X + 6, 0, 7]} size={FLOOR_SIZE} />
       <BackWall />
-      <ShadowCeiling />
       <SideWallGroup>
         <Wall />
         <Window />
-        <Outdoors />
+        <SkyView opening={WIN} />
         {/* Stood up in front of the window's left edge, leaning on the sill. */}
         <MidiKeyboard x={WIN.x0 + 0.2} />
         {/* Pulled off the wall so the music stand fits behind the bars. */}
@@ -536,6 +643,7 @@ function Room({ resetRef }: { resetRef: MutableRefObject<(() => void) | null> })
       <Microphone />
       <Figurines />
       <Mug />
+      <StationeryBasket />
       <Plants />
       <Notebook />
       <Speaker />
@@ -543,21 +651,17 @@ function Room({ resetRef }: { resetRef: MutableRefObject<(() => void) | null> })
       <Clickable slug="photos" label={[PEG_X0 + PEG_W / 2, PEG_Y0 + PEG_H + 0.06, 0.05]}>
         <PegboardPhotos />
       </Clickable>
-      <PianoCorner>
-        {(piano) => (
-          <Clickable slug="piano" label={[DESK.x1 + 0.26, CAB_TOP + 0.36, 0.35]}>
-            {piano}
-          </Clickable>
-        )}
-      </PianoCorner>
+      <Clickable slug="piano" label={[PIANO_POS[0], SHEET_CAB.h + 0.5, 0.3]}>
+        <LegoPiano />
+      </Clickable>
       <Posters />
       <DysonFan />
       <Clickable slug="snowboard" label={[SKIS_CX, 1.82, 0.12]}>
         <Skis />
       </Clickable>
       {/* Sheet-music cabinet + turntable, centred under the wall-hung guitars. */}
-      <SheetCabinet x1={DESK.x1 + 1.375 + SHEET_CABINET_W / 2} />
-      <Clickable slug="guitars" label={[DESK.x1 + 1.375, 2.08, 0.2]}>
+      <SheetCabinet x1={SHEET_CAB.x0 + SHEET_CAB.w} />
+      <Clickable slug="guitars" label={[SHEET_CAB_CX, 2.08, 0.2]}>
         <Guitars />
       </Clickable>
       <GamingChair position={[DESK_CX - 0.05, 0, 1.12]} yaw={-0.8} />
@@ -574,28 +678,38 @@ function Room({ resetRef }: { resetRef: MutableRefObject<(() => void) | null> })
         rotateSpeed={0.6}
         panSpeed={0.8}
         zoomSpeed={0.9}
-        minAzimuthAngle={0.05}
-        maxAzimuthAngle={Math.PI / 2 - 0.05}
-        minPolarAngle={0.3}
-        maxPolarAngle={1.5}
+        minAzimuthAngle={0.18}
+        maxAzimuthAngle={Math.PI / 2 - 0.18}
+        minPolarAngle={MIN_POLAR}
+        maxPolarAngle={1.45}
         onChange={clampTarget}
       />
-      <ContactShadows position={[0.4, 0.001, 0.85]} opacity={0.38} scale={6} blur={2.2} far={1.4} resolution={512} />
+      {/* Grounding shadows right under props, across the whole room floor. */}
+      <ContactShadows position={[1.3, 0.001, 1.4]} opacity={0.5} scale={8} blur={2.6} far={1.2} resolution={1024} />
       <Optional>
         <Suspense fallback={null}>
           <Environment preset="apartment" environmentIntensity={0.28} />
         </Suspense>
       </Optional>
-    </>
+    </NightProvider>
   );
 }
 
 export default function RoomScene() {
   const resetRef = useRef<(() => void) | null>(null);
+  const [night, setNight] = useState(readStoredNight);
+  const toggleNight = () =>
+    setNight((v) => {
+      storeNight(!v);
+      return !v;
+    });
   return (
     <div className={styles.root}>
       <div className={styles.viewControls}>
         <span className={styles.hint}>拖曳旋轉 · 右鍵平移 · 滾輪縮放</span>
+        <button type="button" className={styles.reset} aria-pressed={night} onClick={toggleNight}>
+          {night ? "☀ 白天" : "☾ 夜間"}
+        </button>
         <button type="button" className={styles.reset} onClick={() => resetRef.current?.()}>
           重設視角
         </button>
@@ -605,9 +719,9 @@ export default function RoomScene() {
         shadows
         dpr={[1, 1.75]}
         camera={{ fov: 35, position: [4.2, 2.8, 4.2], near: 0.08, far: 40 }}
-        gl={{ antialias: true }}
+        gl={{ antialias: true, stencil: true }}
       >
-        <Room resetRef={resetRef} />
+        <Room resetRef={resetRef} night={night} />
       </Canvas>
     </div>
   );

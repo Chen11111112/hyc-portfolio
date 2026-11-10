@@ -21,6 +21,13 @@ export const PEG_X0 = DESK_CX - 0.05;
 export const PEG_Y0 = 1.36;
 export const PEG_FACE_Z = 0.016;
 
+/**
+ * Back wall, right of the desk: the sheet-music cabinet (turntable, LEGO piano and LEGO plant on top,
+ * guitars hung above), then the crossed skis.
+ */
+export const SHEET_CAB = { x0: DESK.x1 + 0.06, w: 0.95, h: 0.45, d: 0.42 };
+export const SHEET_CAB_CX = SHEET_CAB.x0 + SHEET_CAB.w / 2;
+
 /** Deterministic PRNG so procedural props look the same on every load. */
 export function rng(seed: number) {
   let s = seed >>> 0;

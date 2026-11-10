@@ -2,12 +2,15 @@
 
 import { useEffect, useMemo } from "react";
 import { CanvasTexture, ExtrudeGeometry, RepeatWrapping, Shape, SRGBColorSpace } from "three";
-import { DESK } from "../layout";
+import { SHEET_CAB_CX, type Vec3 } from "../layout";
 import { Cyl } from "./primitives";
 
 // Bladeless tower purifier fan (Dyson-style): tall narrow stadium-shaped loop on a tapered dark neck,
-// perforated silver base band, dark nickel foot. ~1.05 m tall. On the floor in front of the LEGO piano.
-const BASE_R = 0.115;
+// perforated silver base band, dark nickel foot. ~1.05 m tall.
+export const BASE_R = 0.115;
+/** On the floor in front of the LEGO piano (which sits on the sheet cabinet). */
+export const FAN_POS: Vec3 = [SHEET_CAB_CX + 0.24, 0, 0.95];
+export const FAN_YAW = -0.45;
 const FOOT_H = 0.04;
 const MESH_H = 0.2;
 const NECK_H = 0.075;
@@ -91,7 +94,7 @@ export default function DysonFan() {
   const neckY0 = meshY0 + MESH_H + 0.006;
   const loopCy = neckY0 + NECK_H + LOOP_H / 2 - 0.03;
   return (
-    <group position={[DESK.x1 + 0.26, 0, 0.95]} rotation={[0, -0.45, 0]}>
+    <group position={FAN_POS} rotation={[0, FAN_YAW, 0]}>
       {/* Dark nickel foot + thin silver trim. */}
       <Cyl r={BASE_R} h={FOOT_H} position={[0, FOOT_H / 2, 0]} seg={48} {...NICKEL} />
       <Cyl r={BASE_R + 0.001} h={0.008} position={[0, FOOT_H + 0.004, 0]} seg={48} {...SILVER} />

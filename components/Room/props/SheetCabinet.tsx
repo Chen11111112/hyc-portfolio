@@ -3,15 +3,14 @@
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import { DoubleSide, type Group } from "three";
-import { rng } from "../layout";
+import { SHEET_CAB, rng } from "../layout";
 import { Box, Cyl, Rod } from "./primitives";
 
-// Horizontal 日-shaped open sheet-music cabinet with a vinyl turntable on top; sits under the wall-hung guitars.
+// Horizontal 日-shaped open sheet-music cabinet right of the desk, under the wall-hung guitars.
 // Side-wall-local coords: wall at z = 0, room toward +z. `x1` is the edge nearest the marimba.
-export const SHEET_CABINET_W = 0.95;
-const W = SHEET_CABINET_W;
+const W = SHEET_CAB.w;
 const D = 0.42;
-const H = 0.45;
+const H = SHEET_CAB.h;
 const WOOD = { color: "#4a2f20", roughness: 0.55 };
 const FRONT = { color: "#5a3a28", roughness: 0.5 };
 
@@ -131,15 +130,16 @@ export default function SheetCabinet({ x1 }: { x1: number }) {
       <Box size={[W, H, 0.008]} position={[cx, H / 2, cz - D / 2 + 0.004]} color="#3e271b" roughness={0.6} />
       <Compartment seed={11} floorY={floorY} cx={cx - W / 4 + T / 4} cz={cz + 0.02} width={compW} />
       <Compartment seed={29} floorY={floorY} cx={cx + W / 4 - T / 4} cz={cz + 0.02} width={compW} />
-      <group position={[cx - 0.12, H, cz + 0.01]}>
+      {/* Top: turntable on the left; the LEGO grand piano (placed by the scene) fills the right half. */}
+      <group position={[cx - W / 2 + 0.235, H, cz + 0.01]}>
         <Turntable />
       </group>
-      {/* A couple of record sleeves leaning against the right side. */}
+      {/* A couple of record sleeves leaning against the left side, in the gap by the desk. */}
       {[
         { c: "#e3b23c", dz: 0.0 },
         { c: "#2f4858", dz: 0.012 },
       ].map(({ c, dz }) => (
-        <Box key={c} size={[0.004, 0.31, 0.31]} position={[cx + W / 2 + 0.03 + dz * 2, 0.155, cz + 0.02 + dz]} rotation={[0, 0, -0.12]} color={c} roughness={0.6} />
+        <Box key={c} size={[0.004, 0.31, 0.31]} position={[cx - W / 2 - 0.012 - dz * 1.5, 0.155, cz + 0.02 + dz]} rotation={[0, 0, -0.05]} color={c} roughness={0.6} />
       ))}
     </group>
   );

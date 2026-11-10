@@ -1,0 +1,18 @@
+// Intro + outbound links shown in the homepage terminal.
+
+export const PROFILE_INTRO = {
+  headline: "I am HungYu Chen, born in 2007.",
+  roles: ["Full-stack Engineer | CSIA Ski Instructor", "PSM-I Scrum Master | Musician"],
+  tagline: "I work with logic, motion, and sound.",
+  note: "Holder of several professional certifications. with distinctions earned in programming competitions",
+} as const;
+
+export type ProfileLink = { label: string; href: string; display: string };
+
+export const PROFILE_LINKS: ProfileLink[] = [
+  { label: "Course", href: "https://course.hychen.space/", display: "course.hychen.space" },
+  { label: "Program", href: "https://hyc.eshachem.com/program", display: "hyc.eshachem.com/program" },
+  { label: "Instagram", href: "https://www.instagram.com/hy.chen._.1029/", display: "@hy.chen._.1029" },
+  { label: "YouTube", href: "https://www.youtube.com/@Hy.C", display: "@Hy.C" },
+  { label: "GitHub", href: "https://github.com/Chen11111112", display: "Chen11111112" },
+];

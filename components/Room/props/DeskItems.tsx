@@ -1,9 +1,11 @@
 "use client";
 
 import { RoundedBox, useTexture } from "@react-three/drei";
-import { Suspense, useEffect, useMemo } from "react";
-import { CanvasTexture, DoubleSide, SRGBColorSpace } from "three";
+import { useFrame } from "@react-three/fiber";
+import { Suspense, useEffect, useMemo, useRef } from "react";
+import { CanvasTexture, DoubleSide, SRGBColorSpace, type MeshStandardMaterial, type PointLight } from "three";
 import { DESK, DESK_CX, SHELF_W, SHELF_X0, type Vec3 } from "../layout";
+import { lerp, useNightMix } from "../nightMode";
 import { Box, Cyl, Rod } from "./primitives";
 
 const TOP = DESK.top;
@@ -12,6 +14,18 @@ const CHROME = { color: "#d4d7da", roughness: 0.18, metalness: 0.95 };
 
 /** Warm table lamp with a linen drum shade — the desk's mood light, on the bookshelf side just past the shelf. */
 export function DeskLamp() {
+  const light = useRef<PointLight>(null);
+  const shade = useRef<MeshStandardMaterial>(null);
+  const mix = useNightMix();
+  // At night the lamp becomes the room's main light.
+  useFrame(() => {
+    const m = mix.current;
+    if (light.current) {
+      light.current.intensity = lerp(0.9, 3.2, m);
+      light.current.distance = lerp(1.8, 3.2, m);
+    }
+    if (shade.current) shade.current.emissiveIntensity = lerp(0.42, 1.15, m);
+  });
   return (
     <group position={[SHELF_X0 + SHELF_W + 0.1, TOP, 0.13]}>
       <Cyl r={0.055} rTop={0.05} h={0.016} position={[0, 0.008, 0]} {...CHROME} />
@@ -23,6 +37,7 @@ export function DeskLamp() {
       <mesh position={[0, 0.215, 0]} castShadow>
         <cylinderGeometry args={[0.072, 0.092, 0.14, 40, 1, true]} />
         <meshStandardMaterial
+          ref={shade}
           color="#efe6d6"
           roughness={0.95}
           side={DoubleSide}
@@ -30,7 +45,7 @@ export function DeskLamp() {
           emissiveIntensity={0.42}
         />
       </mesh>
-      <pointLight position={[0, 0.19, 0]} color="#ffc27a" intensity={0.9} distance={1.8} decay={2} />
+      <pointLight ref={light} position={[0, 0.19, 0]} color="#ffc27a" intensity={0.9} distance={1.8} decay={2} />
     </group>
   );
 }
@@ -144,6 +159,9 @@ export function PenHolder() {
     { tip: [-0.02, 0.16, 0.018], color: "#f2c230" },
     { tip: [0.026, 0.15, -0.016], color: "#2d6cdf" },
     { tip: [-0.008, 0.17, -0.024], color: "#1d1d1f" },
+    { tip: [0.03, 0.165, 0.012], color: "#e2483d" },
+    { tip: [-0.026, 0.155, -0.006], color: "#f2c230" },
+    { tip: [0.004, 0.19, -0.002], color: "#3c9a5f" },
   ] as const;
   return (
     <group position={[DESK.x1 - 0.13, TOP, 0.11]}>
@@ -450,6 +468,114 @@ export function Figurines() {
       <group position={[0.035, 0, 0.005]} rotation={[0, -0.5 - Math.PI / 2, 0]}>
         <Dog />
       </group>
+    </group>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* MUJI-style divided stationery box between the monitor riser and the speaker. */
+/* ------------------------------------------------------------------ */
+
+const ORG = { w: 0.16, d: 0.12, h: 0.06, t: 0.003 };
+/** Back compartment depth (full width); the front is split left/right. */
+const ORG_BACK = 0.05;
+const ORG_SPLIT_X = -ORG.w / 2 + 0.09;
+
+/** Frosted translucent polypropylene, like MUJI's PP organisers. */
+function FrostedPP({ size, position }: { size: Vec3; position: Vec3 }) {
+  return (
+    <mesh position={position} castShadow receiveShadow>
+      <boxGeometry args={size} />
+      <meshPhysicalMaterial color="#f6f7f8" roughness={0.55} transparent opacity={0.78} />
+    </mesh>
+  );
+}
+
+function BinderClip({ position, rotation, color = "#1b1b1d" }: { position: Vec3; rotation?: Vec3; color?: string }) {
+  return (
+    <group position={position} rotation={rotation}>
+      <Box size={[0.025, 0.014, 0.012]} position={[0, 0.007, 0]} color={color} roughness={0.35} metalness={0.4} />
+      {[-1, 1].map((s) => (
+        <Rod key={s} from={[s * 0.009, 0.013, s * 0.005]} to={[s * 0.009, 0.028, s * 0.012]} r={0.0009} color="#c9ccd0" metalness={0.9} roughness={0.25} />
+      ))}
+      <Rod from={[-0.009, 0.028, 0.012]} to={[0.009, 0.028, 0.012]} r={0.0009} color="#c9ccd0" metalness={0.9} roughness={0.25} />
+    </group>
+  );
+}
+
+function MiniStapler({ position, rotation }: { position: Vec3; rotation?: Vec3 }) {
+  return (
+    <group position={position} rotation={rotation}>
+      <Box size={[0.07, 0.008, 0.022]} position={[0, 0.004, 0]} color="#2b2c30" roughness={0.4} metalness={0.3} />
+      <Box size={[0.066, 0.014, 0.02]} position={[0.001, 0.016, 0]} rotation={[0, 0, 0.05]} color="#e9e8e4" roughness={0.35} />
+      <Cyl r={0.006} h={0.022} position={[-0.032, 0.012, 0]} rotation={[Math.PI / 2, 0, 0]} color="#2b2c30" roughness={0.4} metalness={0.3} />
+    </group>
+  );
+}
+
+function CorrectionTape({ position, rotation }: { position: Vec3; rotation?: Vec3 }) {
+  return (
+    <group position={position} rotation={rotation}>
+      <RoundedBox args={[0.055, 0.032, 0.016]} radius={0.006} smoothness={3} position={[0, 0.016, 0]} castShadow>
+        <meshStandardMaterial color="#e6eef7" roughness={0.3} />
+      </RoundedBox>
+      <Cyl r={0.011} h={0.0165} position={[-0.006, 0.016, 0]} rotation={[Math.PI / 2, 0, 0]} color="#2f6fd6" roughness={0.4} cast={false} />
+      <Box size={[0.012, 0.008, 0.008]} position={[0.03, 0.006, 0]} color="#f2a03b" roughness={0.4} />
+    </group>
+  );
+}
+
+export function StationeryBasket() {
+  const { w, d, h, t } = ORG;
+  const backZ = -d / 2 + ORG_BACK;
+  const frontMidZ = (backZ + d / 2) / 2;
+  return (
+    <group position={[(RISER.x1 + DESK.x1 - 0.45) / 2, TOP, 0.1]} rotation={[0, -0.06, 0]}>
+      {/* Tray: base, outer walls, one long divider, one cross divider in front. */}
+      <FrostedPP size={[w, t, d]} position={[0, t / 2, 0]} />
+      <FrostedPP size={[w, h, t]} position={[0, h / 2, d / 2 - t / 2]} />
+      <FrostedPP size={[w, h, t]} position={[0, h / 2, -d / 2 + t / 2]} />
+      <FrostedPP size={[t, h, d]} position={[w / 2 - t / 2, h / 2, 0]} />
+      <FrostedPP size={[t, h, d]} position={[-w / 2 + t / 2, h / 2, 0]} />
+      <FrostedPP size={[w - t * 2, h * 0.9, t]} position={[0, (h * 0.9) / 2, backZ]} />
+      <FrostedPP size={[t, h * 0.9, d / 2 - backZ - t]} position={[ORG_SPLIT_X, (h * 0.9) / 2, frontMidZ]} />
+
+      {/* Back: scissors and a clear ruler standing up. */}
+      <group position={[-0.05, 0.004, (backZ - d / 2) / 2]} rotation={[0.05, 0.2, 0.12]}>
+        <Box size={[0.008, 0.075, 0.003]} position={[0.002, 0.04, 0]} rotation={[0, 0, 0.06]} color="#c9ccd0" metalness={0.9} roughness={0.2} />
+        <Box size={[0.008, 0.075, 0.003]} position={[-0.002, 0.04, 0.002]} rotation={[0, 0, -0.06]} color="#c9ccd0" metalness={0.9} roughness={0.2} />
+        {[-1, 1].map((s) => (
+          <mesh key={s} position={[s * 0.012, 0.09, 0]} castShadow>
+            <torusGeometry args={[0.011, 0.0035, 8, 18]} />
+            <meshStandardMaterial color="#2f6fd6" roughness={0.4} />
+          </mesh>
+        ))}
+      </group>
+      <group position={[0.035, 0.004, (backZ - d / 2) / 2]} rotation={[0.06, 0, -0.18]}>
+        <mesh position={[0, 0.08, 0]} castShadow>
+          <boxGeometry args={[0.022, 0.16, 0.002]} />
+          <meshPhysicalMaterial color="#dff1ff" roughness={0.1} transparent opacity={0.55} />
+        </mesh>
+        {Array.from({ length: 15 }, (_, i) => (
+          <Box key={i} size={[i % 5 === 0 ? 0.008 : 0.005, 0.0006, 0.0004]} position={[-0.007, 0.005 + i * 0.01, 0.0013]} color="#2b2b2b" cast={false} />
+        ))}
+      </group>
+
+      {/* Front left: mini stapler and a roll of tape. */}
+      <MiniStapler position={[ORG_SPLIT_X - 0.046, t, backZ + 0.013]} />
+      <mesh position={[ORG_SPLIT_X - 0.045, t + 0.007, d / 2 - 0.024]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <torusGeometry args={[0.015, 0.006, 8, 20]} />
+        <meshPhysicalMaterial color="#eef2f5" roughness={0.2} transparent opacity={0.85} />
+      </mesh>
+
+      {/* Front right: correction tape standing up, sticky notes, eraser, binder clips. */}
+      <CorrectionTape position={[ORG_SPLIT_X + 0.035, t, backZ + 0.012]} />
+      <Box size={[0.05, 0.012, 0.04]} position={[ORG_SPLIT_X + 0.036, t + 0.006, d / 2 - 0.024]} color="#f7e26b" roughness={0.85} />
+      <Box size={[0.026, 0.01, 0.012]} position={[ORG_SPLIT_X + 0.022, t + 0.017, d / 2 - 0.026]} rotation={[0, -0.3, 0]} color="#f5f5f2" roughness={0.9} />
+      <BinderClip position={[ORG_SPLIT_X + 0.05, t + 0.012, d / 2 - 0.022]} rotation={[0, 0.5, 0]} />
+      <BinderClip position={[ORG_SPLIT_X + 0.025, t + 0.012, d / 2 - 0.016]} rotation={[0, -0.7, 0]} color="#d64545" />
+      {/* One clip pinched onto the front rim. */}
+      <BinderClip position={[0.045, h - 0.012, d / 2 + 0.004]} color="#2f6fd6" />
     </group>
   );
 }

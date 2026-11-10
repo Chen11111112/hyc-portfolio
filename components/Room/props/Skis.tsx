@@ -1,17 +1,17 @@
 "use client";
 
-import { DESK, type Vec3 } from "../layout";
+import { SHEET_CAB, type Vec3 } from "../layout";
 import { Box, Cyl } from "./primitives";
 
 // A pair of skis stood on their tails against the back wall, crossed in an X,
-// between the LEGO piano cabinet and the guitars, with the poles standing in the V.
+// right of the sheet-music cabinet and guitars, with the poles standing in the V.
 const L = 1.65; // ski length
 const T = 0.014; // thickness
 const SPREAD = 0.15; // half the distance between the tails (and between the tips)
 const TILT = Math.atan2(SPREAD * 2, L * 0.97); // in-wall-plane tilt that crosses them
 const LEAN = 0.13; // lean back toward the wall
 const BASE_Z = 0.24;
-export const SKIS_CX = DESK.x1 + 0.67;
+export const SKIS_CX = SHEET_CAB.x0 + SHEET_CAB.w + 0.27;
 
 // Grey top sheet with blue graphics.
 const TOP = { color: "#8a9099", roughness: 0.32, metalness: 0.2 };

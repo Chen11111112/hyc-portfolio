@@ -6,13 +6,15 @@ import { SRGBColorSpace } from "three";
 import { PEG_H, PEG_W, PEG_X0, PEG_Y0, rng, type Vec3 } from "../layout";
 import { Box } from "./primitives";
 
-// Nine posters on the back wall, continuing right from the pegboard photo wall and running above the
-// guitars. Two staggered rows: 5 along the pegboard's height, 4 above. Sources are public/1.png … 9.png.
+// Nine posters (public/1.png … 9.png) wrapped around the pegboard photo wall, starting at its left edge:
+// a top row of 5 above the pegboard, then a row of 4 beside it at the pegboard's height, running right
+// over the guitars.
 const SOURCES = Array.from({ length: 9 }, (_, i) => `/${i + 1}.png`);
 const SIZE = 0.42;
 const GAP = 0.04;
 const BORDER = 0.014;
-const START_X = PEG_X0 + PEG_W + 0.07;
+const TOP_START_X = PEG_X0;
+const SIDE_START_X = PEG_X0 + PEG_W + 0.07;
 const LOW_Y = PEG_Y0 + PEG_H / 2;
 const HIGH_Y = LOW_Y + SIZE + GAP;
 
@@ -36,13 +38,14 @@ function PosterArt({ src }: { src: string }) {
 const LAYOUT = (() => {
   const rand = rng(17);
   return SOURCES.map((src, i) => {
-    const low = i < 5;
-    const col = low ? i : i - 5 + 0.5;
+    const top = i < 5;
+    const x0 = top ? TOP_START_X : SIDE_START_X;
+    const col = top ? i : i - 5;
     return {
       src,
       position: [
-        START_X + SIZE / 2 + col * (SIZE + GAP) + (rand() - 0.5) * 0.02,
-        (low ? LOW_Y : HIGH_Y) + (rand() - 0.5) * 0.02,
+        x0 + SIZE / 2 + col * (SIZE + GAP) + (rand() - 0.5) * 0.02,
+        (top ? HIGH_Y : LOW_Y) + (rand() - 0.5) * 0.02,
         0.002,
       ] as Vec3,
       tilt: (rand() - 0.5) * 0.04,
