@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
 import { BOARDS } from "./lifeContent";
 import styles from "./LifeWall.module.scss";
 
@@ -18,30 +18,39 @@ const WHEEL_COOLDOWN_MS = 700;
 /**
  * Life page: the room's desk against the wall (same scene as About) with two cork boards of photos and
  * stickers. Drag or swipe sideways (the wall follows your finger, then snaps), two-finger swipe on a
- * trackpad, the arrow keys, or the board buttons move between the boards.
+ * trackpad, or the arrow keys move between views: one per board on wide screens, several across each
+ * board on phones, where the camera stays close so the photos are bigger.
  */
 export default function LifeWall() {
-  const [board, setBoard] = useState(0);
+  const [stop, setStop] = useState(0);
   const sceneRef = useRef<HTMLDivElement>(null);
   /** Live drag distance in px, read by the camera every frame (no re-render while dragging). */
   const dragPx = useRef(0);
   const drag = useRef<{ id: number; x: number; y: number; horizontal: boolean | null } | null>(null);
-  const boardRef = useRef(0);
-  const last = BOARDS.length - 1;
+  const stopRef = useRef(0);
+  /** How many views the scene has for this screen size (it reports it on every resize). */
+  const stopCount = useRef(BOARDS.length);
   const go = (i: number) => {
-    const next = Math.max(0, Math.min(last, i));
-    boardRef.current = next;
-    setBoard(next);
+    const next = Math.max(0, Math.min(stopCount.current - 1, i));
+    stopRef.current = next;
+    setStop(next);
   };
+  const onStops = useCallback((n: number) => {
+    stopCount.current = n;
+    if (stopRef.current > n - 1) {
+      stopRef.current = n - 1;
+      setStop(n - 1);
+    }
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight") go(boardRef.current + 1);
-      if (e.key === "ArrowLeft") go(boardRef.current - 1);
+      if (e.key === "ArrowRight") go(stopRef.current + 1);
+      if (e.key === "ArrowLeft") go(stopRef.current - 1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   // Trackpad two-finger swipe / shift+wheel: sideways scroll flips the board. Non-passive so the
@@ -59,20 +68,20 @@ export default function LifeWall() {
       if (now < lockedUntil) return;
       acc += dx;
       if (Math.abs(acc) >= WHEEL_PX) {
-        go(boardRef.current + (acc > 0 ? 1 : -1));
+        go(stopRef.current + (acc > 0 ? 1 : -1));
         acc = 0;
         lockedUntil = now + WHEEL_COOLDOWN_MS;
       }
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType === "mouse" && e.button !== 0) return;
+    // No pointer capture yet: a plain click must still reach the 3D scene (the mini cat and dog).
     drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY, horizontal: null };
-    e.currentTarget.setPointerCapture(e.pointerId);
   };
   const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
     const d = drag.current;
@@ -80,7 +89,11 @@ export default function LifeWall() {
     const dx = e.clientX - d.x;
     const dy = e.clientY - d.y;
     // Decide once whether this gesture is sideways; vertical ones are left alone.
-    if (d.horizontal === null && Math.hypot(dx, dy) > 8) d.horizontal = Math.abs(dx) > Math.abs(dy);
+    if (d.horizontal === null && Math.hypot(dx, dy) > 8) {
+      d.horizontal = Math.abs(dx) > Math.abs(dy);
+      // Now it's a swipe: keep getting its moves even if the pointer leaves the page.
+      if (d.horizontal) e.currentTarget.setPointerCapture(e.pointerId);
+    }
     if (d.horizontal) dragPx.current = dx;
   };
   const endDrag = (e: PointerEvent<HTMLDivElement>) => {
@@ -90,13 +103,14 @@ export default function LifeWall() {
     const dx = dragPx.current;
     dragPx.current = 0;
     // Drag the wall left to see the board on the right.
-    if (d.horizontal && Math.abs(dx) >= SWIPE_PX) go(boardRef.current + (dx < 0 ? 1 : -1));
+    if (d.horizontal && Math.abs(dx) >= SWIPE_PX) go(stopRef.current + (dx < 0 ? 1 : -1));
   };
 
   return (
     <main className={styles.page}>
       <div
         ref={sceneRef}
+        data-life-scene
         className={styles.scene}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -104,7 +118,7 @@ export default function LifeWall() {
         onPointerCancel={endDrag}
         aria-hidden
       >
-        <LifeScene board={board} dragPx={dragPx} />
+        <LifeScene stop={stop} dragPx={dragPx} onStops={onStops} />
       </div>
 
       <header className={styles.header}>
@@ -114,13 +128,6 @@ export default function LifeWall() {
         <h1 className={styles.title}>Life</h1>
       </header>
 
-      <nav className={styles.boards} aria-label="切換軟木板">
-        {BOARDS.map((b, i) => (
-          <button key={b.label} type="button" className={styles.boardButton} aria-pressed={board === i} onClick={() => go(i)}>
-            {b.label}
-          </button>
-        ))}
-      </nav>
 
       {/* What the boards show, for screen readers and search (the 3D scene itself is hidden from them). */}
       <div className={styles.srOnly}>

@@ -2,7 +2,7 @@
 
 import { ContactShadows, useTexture } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useLayoutEffect, useMemo, useRef, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import {
   BufferGeometry,
   CatmullRomCurve3,
@@ -11,15 +11,17 @@ import {
   SRGBColorSpace,
   TubeGeometry,
   Vector3,
+  type Group,
   type MeshStandardMaterial,
   type PerspectiveCamera,
 } from "three";
 import { Desk, Pencil, PencilCup, Sun, WALL, WALL_Z, type WindowOpening } from "@/components/AboutBooks/BookStack";
 import { Pin } from "@/components/Room/props/BackWallExtras";
 import { useCanvasTexture, type Draw } from "@/components/Room/props/canvasTexture";
-import { Cat, Dog } from "@/components/Room/props/DeskItems";
 import SafeSuspense from "@/components/Room/props/SafeSuspense";
 import { TurntableModel } from "@/components/Room/props/SheetCabinet";
+import type { Vec3 } from "@/components/Room/layout";
+import { ClayDiorama, DIORAMA_SEATS, MiniCat, MiniDog } from "./ClayDiorama";
 import { MiniPlant, Orchid, PeaceLily, RoseBouquet, TulipBouquet, WildflowerVase } from "./LegoFlowers";
 import { BOARDS, type Shot, type StickerArt } from "./lifeContent";
 
@@ -168,71 +170,194 @@ function CorkBoard({ index }: { index: number }) {
 
 /* ------------------------------ Desk ------------------------------ */
 
+type Friend = "cat" | "dog";
+type Place = { x: number; z: number; yaw?: number; scale?: number };
 
-/** Hand-made clay pieces: soft, slightly squashed lumps in the CSS version's colours. */
-const CLAYS: { x: number; z: number; r: number; scale: [number, number, number]; color: string; yaw: number }[] = [
-  { x: 1.36, z: 0.1, r: 0.03, scale: [1, 0.85, 0.9], color: "#d97862", yaw: 0.3 },
-  { x: 1.74, z: 0.27, r: 0.024, scale: [1.2, 0.7, 1], color: "#e7c27a", yaw: -0.4 },
-  { x: 0.42, z: 0.34, r: 0.028, scale: [1.15, 0.8, 0.95], color: "#7eafc6", yaw: 0.6 },
+/** The diorama is the desk's centrepiece, scaled up a little so the mini cat and dog read on a phone. */
+const DIORAMA: Place = { x: 0.17, z: 0.2, yaw: -0.15, scale: 1.35 };
+const TURNTABLE: Place = { x: -0.28, z: 0.06, yaw: 0.12, scale: 0.8 };
+const MINI_POTS: (Place & { kind: "rosette" | "cactus" | "bloom" })[] = [
+  { x: 1.22, z: 0.29, kind: "rosette" },
+  { x: 1.29, z: 0.21, kind: "cactus" },
+  { x: 1.36, z: 0.3, kind: "bloom" },
+  { x: 1.44, z: 0.24, kind: "rosette" },
 ];
 
+/** A point given in a placed object's own coordinates, in world (desk) coordinates. */
+function toWorld({ x, z, yaw = 0, scale = 1 }: Place, [lx, ly, lz]: Vec3): Vec3 {
+  const c = Math.cos(yaw);
+  const s = Math.sin(yaw);
+  return [x + (lx * c + lz * s) * scale, ly * scale, z + (-lx * s + lz * c) * scale];
+}
+
+/** Per-place seats for the cat and dog: on the diorama rim, the turntable's front corner, each mini pot's rim. */
+const SEATS: Record<string, Record<Friend, Vec3>> = {
+  diorama: { cat: toWorld(DIORAMA, DIORAMA_SEATS.cat), dog: toWorld(DIORAMA, DIORAMA_SEATS.dog) },
+  turntable: { cat: toWorld(TURNTABLE, [0.15, 0.07, 0.14]), dog: toWorld(TURNTABLE, [0.185, 0.07, 0.12]) },
+  ...Object.fromEntries(
+    MINI_POTS.map((p, i) => [`pot${i}`, { cat: toWorld(p, [-0.009, 0.037, 0.013]), dog: toWorld(p, [0.009, 0.037, 0.013]) }]),
+  ),
+};
+const FIGURE_SCALE = DIORAMA.scale ?? 1;
+/** Cursor over the scene ("" restores the container's grab hand); the scene wrapper is tagged `data-life-scene`. */
+function setCursor(c: string) {
+  const el = document.querySelector<HTMLElement>("[data-life-scene]");
+  if (el) el.style.cursor = c;
+}
+
+/** Pointer travel (px) beyond which a press counts as a swipe, not a click. */
+const CLICK_PX = 6;
+
+/**
+ * The mini cat and dog: click one to pick it up (it floats and glows), then click the diorama, the
+ * turntable, a mini pot or anywhere on the desk to set it down there. Click it again to put it back on the diorama.
+ */
+function useFriends() {
+  const [held, setHeld] = useState<Friend | null>(null);
+  const [spots, setSpots] = useState<Record<Friend, Vec3>>({ cat: SEATS.diorama.cat, dog: SEATS.diorama.dog });
+  const pick = (f: Friend) => {
+    if (held === f) {
+      // Second click on the one you're holding: home to the diorama.
+      setSpots((s) => ({ ...s, [f]: SEATS.diorama[f] }));
+      setHeld(null);
+    } else setHeld(f);
+  };
+  const putAt = (p: Vec3) => {
+    if (!held) return;
+    setSpots((s) => ({ ...s, [held]: p }));
+    setHeld(null);
+  };
+  const seat = (place: string) => () => held && putAt(SEATS[place][held]);
+  return { held, spots, pick, putAt, seat };
+}
+
+function FriendFigure({ who, at, held, onPick }: { who: Friend; at: Vec3; held: boolean; onPick: () => void }) {
+  const ref = useRef<Group>(null);
+  const [hovered, setHovered] = useState(false);
+  useFrame(({ clock }, dt) => {
+    const g = ref.current;
+    if (!g) return;
+    const k = Math.min(1, dt * 8);
+    const y = at[1] + (held ? 0.05 + Math.sin(clock.elapsedTime * 3) * 0.004 : 0);
+    g.position.x += (at[0] - g.position.x) * k;
+    g.position.y += (y - g.position.y) * k;
+    g.position.z += (at[2] - g.position.z) * k;
+  });
+  return (
+    <group
+      ref={ref}
+      position={at}
+      scale={FIGURE_SCALE}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        setHovered(true);
+        setCursor("pointer");
+      }}
+      onPointerOut={() => {
+        setHovered(false);
+        setCursor("");
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (e.delta > CLICK_PX) return;
+        onPick();
+      }}
+    >
+      {who === "cat" ? <MiniCat glow={held || hovered} /> : <MiniDog glow={held || hovered} />}
+      {/* Bigger invisible hit area: the figures are only ~2.5 cm tall. */}
+      <mesh position={[0, 0.013, 0]}>
+        <sphereGeometry args={[0.02, 8, 6]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
+      </mesh>
+    </group>
+  );
+}
+
+/** Wraps a desk object as a place to set a held figure down (only reacts while one is held). */
+function Seat({ active, onSeat, children }: { active: boolean; onSeat: () => void; children: ReactNode }) {
+  return (
+    <group
+      onPointerOver={(e) => {
+        if (!active) return;
+        e.stopPropagation();
+        setCursor("copy");
+      }}
+      onPointerOut={() => active && setCursor("")}
+      onClick={(e) => {
+        if (!active || e.delta > CLICK_PX) return;
+        e.stopPropagation();
+        onSeat();
+      }}
+    >
+      {children}
+    </group>
+  );
+}
+
 function DeskObjects() {
+  const { held, spots, pick, putAt, seat } = useFriends();
+  const holding = held !== null;
   return (
     <group>
-      {/* Under board one: turntable (lid up, record showing), roses, mini pots, the peace lily, pencils. */}
-      <group position={[-0.28, 0, 0.06]} rotation={[0, 0.12, 0]} scale={0.8}>
-        <TurntableModel />
-      </group>
-      <group position={[0.06, 0, 0.18]} rotation={[0, 0.3, 0]}>
+      {/* Anywhere on the desk top: set the held figure down where you click. */}
+      {holding && (
+        <mesh
+          position={[0.74, 0.0006, 0.13]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          onPointerOver={() => setCursor("copy")}
+          onPointerOut={() => setCursor("")}
+          onClick={(e) => {
+            if (e.delta > CLICK_PX) return;
+            e.stopPropagation();
+            putAt([e.point.x, 0, e.point.z]);
+          }}
+        >
+          <planeGeometry args={[2.9, 0.54]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
+        </mesh>
+      )}
+
+      {/* Under board one: turntable, the clay diorama front and centre, roses, the peace lily, pencils. */}
+      <Seat active={holding} onSeat={seat("turntable")}>
+        <group position={[TURNTABLE.x, 0, TURNTABLE.z]} rotation={[0, TURNTABLE.yaw ?? 0, 0]} scale={TURNTABLE.scale}>
+          <TurntableModel />
+        </group>
+      </Seat>
+      <Seat active={holding} onSeat={seat("diorama")}>
+        <group position={[DIORAMA.x, 0, DIORAMA.z]} rotation={[0, DIORAMA.yaw ?? 0, 0]} scale={DIORAMA.scale}>
+          <ClayDiorama />
+        </group>
+      </Seat>
+      <FriendFigure who="cat" at={spots.cat} held={held === "cat"} onPick={() => pick("cat")} />
+      <FriendFigure who="dog" at={spots.dog} held={held === "dog"} onPick={() => pick("dog")} />
+      <group position={[0.46, 0, 0.12]} rotation={[0, 0.3, 0]}>
         <RoseBouquet />
       </group>
-      <group position={[0.24, 0, 0.29]}>
-        <MiniPlant kind="rosette" />
-      </group>
-      <group position={[0.3, 0, 0.23]}>
-        <MiniPlant kind="cactus" />
-      </group>
-      <group position={[0.36, 0, 0.3]}>
-        <MiniPlant kind="bloom" />
-      </group>
-      <group position={[0.56, 0, 0.14]} rotation={[0, -0.3, 0]}>
+      <group position={[0.67, 0, 0.14]} rotation={[0, -0.3, 0]}>
         <PeaceLily />
       </group>
-      <Pencil position={[0.12, 0.0036, 0.36]} yaw={0.25} />
-      <Pencil position={[0.24, 0.0036, 0.38]} yaw={-0.4} color="#2d6cdf" />
+      <Pencil position={[0.1, 0.0036, 0.37]} yaw={0.25} />
+      <Pencil position={[0.24, 0.0036, 0.385]} yaw={-0.4} color="#2d6cdf" />
       {/* Between the boards: the orchid, its spray arching toward board two. */}
-      <group position={[0.82, 0, 0.12]}>
+      <group position={[0.87, 0, 0.12]}>
         <Orchid />
       </group>
-      {/* Under board two: tulips, clay cat and dog, wildflowers, mini pots, the pencil cup at the end. */}
-      <group position={[1.04, 0, 0.18]} rotation={[0, -0.2, 0]}>
+      {/* Under board two: tulips, mini pots, wildflowers, the pencil cup at the end. */}
+      <group position={[1.06, 0, 0.18]} rotation={[0, -0.2, 0]}>
         <TulipBouquet />
       </group>
-      <group position={[1.26, 0, 0.22]} scale={2.2}>
-        <group position={[-0.035, 0, 0]} rotation={[0, 0.5, 0]}>
-          <Cat />
-        </group>
-        <group position={[0.035, 0, 0.005]} rotation={[0, -0.5 - Math.PI / 2, 0]}>
-          <Dog />
-        </group>
-      </group>
-      <group position={[1.4, 0, 0.33]}>
-        <MiniPlant kind="bloom" />
-      </group>
-      <group position={[1.46, 0, 0.27]}>
-        <MiniPlant kind="rosette" />
-      </group>
-      <group position={[1.58, 0, 0.12]} rotation={[0, 0.2, 0]}>
+      {MINI_POTS.map((p, i) => (
+        <Seat key={`${p.x}`} active={holding} onSeat={seat(`pot${i}`)}>
+          <group position={[p.x, 0, p.z]}>
+            <MiniPlant kind={p.kind} />
+          </group>
+        </Seat>
+      ))}
+      <group position={[1.6, 0, 0.12]} rotation={[0, 0.2, 0]}>
         <WildflowerVase />
       </group>
-      {CLAYS.map((c) => (
-        <mesh key={c.color} position={[c.x, c.r * c.scale[1] * 0.9, c.z]} rotation={[0, c.yaw, 0]} scale={c.scale} castShadow receiveShadow>
-          <sphereGeometry args={[c.r, 24, 18]} />
-          <meshStandardMaterial color={c.color} roughness={0.85} />
-        </mesh>
-      ))}
       <PencilCup x={1.86} />
-      <Pencil position={[1.66, 0.0036, 0.35]} yaw={0.6} color="#e2483d" />
+      <Pencil position={[1.68, 0.0036, 0.35]} yaw={0.6} color="#e2483d" />
     </group>
   );
 }
@@ -347,43 +472,68 @@ function Bunting() {
 
 /* ------------------------------ Camera ------------------------------ */
 
+/** Gap kept between neighbouring stops' views so a swipe always reveals something new. */
+const STOP_MARGIN = 0.03;
+
 /**
- * Faces the wall head-on, framed so the lights, the whole cork board and the desk below it fit; eases
- * sideways to the selected board. While a finger/mouse drags, `dragPx` slides the view with it.
+ * Faces the wall head-on, close in. Where the screen is wide enough the whole board fits and each board is
+ * one stop; on narrow screens (phones) the camera stays close for bigger photos and each board is split
+ * into several stops left to right, so swiping walks across it. `stop` picks one; `onStops` reports how
+ * many there are. While a finger/mouse drags, `dragPx` slides the view with it.
  */
-function CameraRig({ board, dragPx }: { board: number; dragPx: RefObject<number> }) {
+function CameraRig({ stop, dragPx, onStops }: { stop: number; dragPx: RefObject<number>; onStops: (n: number) => void }) {
   const camera = useThree((s) => s.camera) as PerspectiveCamera;
   const size = useThree((s) => s.size);
-  const fit = useRef({ y: 0.6, d: 1.8, lookY: 0.4, pxToWorld: 0.001, peek: 0 });
+  const fit = useRef({ y: 0.6, d: 1.5, lookY: 0.44, pxToWorld: 0.001, stops: [BOARD_X[0]] as number[] });
   const still = useMemo(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches, []);
 
   useLayoutEffect(() => {
-    const aspect = size.width / Math.max(size.height, 1);
+    // Not laid out yet (or a hidden tab): nothing to frame, and a zero-wide view would need endless stops.
+    if (size.width < 1 || size.height < 1) return;
+    const aspect = size.width / size.height;
     const tanHalf = Math.tan(((camera.fov / 2) * Math.PI) / 180);
     const phone = window.matchMedia("(max-width: 760px)").matches;
-    // Half the width/height that must stay in frame: the board plus a margin; from the lights down to the desk's front edge.
-    const halfW = BOARD.w / 2 + (phone ? 0.03 : 0.12);
-    const halfH = phone ? 0.46 : 0.56;
-    const d = Math.max(halfW / (tanHalf * aspect), halfH / tanHalf);
-    const lookY = phone ? 0.44 : 0.4;
+    // Vertical framing only: the board with the bunting above it and the desk's tall pieces below.
+    const halfH = phone ? 0.4 : 0.46;
+    const lookY = 0.44;
+    let d = halfH / tanHalf;
+    // Wide screens: back off only as far as needed to fit the whole board with a small margin.
+    const fullBoard = (BOARD.w / 2 + BOARD.frame + 0.04) / (tanHalf * aspect);
+    if (!phone) d = Math.max(d, fullBoard);
     const visibleW = 2 * d * tanHalf * aspect;
-    // Only shift toward the window when the board still fits with the shift (not on phones).
-    const peek = visibleW / 2 - BOARD.w / 2 - 0.03 >= WINDOW_PEEK ? WINDOW_PEEK : 0;
-    fit.current = { d, lookY, y: lookY + d * 0.14, pxToWorld: visibleW / Math.max(size.width, 1), peek };
-    const x0 = BOARD_X[board] - (board === 0 ? peek : 0);
+    const half = BOARD.w / 2 + BOARD.frame;
+    const stops: number[] = [];
+    BOARD_X.forEach((cx, i) => {
+      const room = visibleW - STOP_MARGIN * 2;
+      if (room >= half * 2) {
+        // Whole board in view; the first one shifts left to show the window when there's room.
+        const spare = visibleW / 2 - half - STOP_MARGIN;
+        stops.push(cx - (i === 0 ? Math.min(WINDOW_PEEK, Math.max(0, spare)) : 0));
+        return;
+      }
+      // Board wider than the view: evenly spaced stops from its left edge to its right edge.
+      // As few stops as cover the board (views may just touch); phones get three per board.
+      const n = Math.ceil((half * 2) / visibleW);
+      const first = cx - half + visibleW / 2 - STOP_MARGIN;
+      const lastX = cx + half - visibleW / 2 + STOP_MARGIN;
+      for (let k = 0; k < n; k += 1) stops.push(n === 1 ? cx : first + ((lastX - first) * k) / (n - 1));
+    });
+    fit.current = { d, lookY, y: lookY + d * 0.12, pxToWorld: visibleW / Math.max(size.width, 1), stops };
+    onStops(stops.length);
+    const x0 = stops[Math.min(stop, stops.length - 1)];
     camera.position.set(x0, fit.current.y, d);
     camera.lookAt(x0, lookY, 0);
     camera.updateProjectionMatrix();
-    // Only re-fit on resize; board changes are animated below.
+    // Only re-fit on resize; stop changes are animated below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [camera, size]);
 
   useFrame((_, dt) => {
-    // Dragging left moves the wall left (view goes right); past the end boards it gives with resistance.
-    const views = BOARD_X.map((x, i) => x - (i === 0 ? fit.current.peek : 0));
-    let goal = views[board] - dragPx.current * fit.current.pxToWorld;
-    const lo = views[0];
-    const hi = views[views.length - 1];
+    // Dragging left moves the wall left (view goes right); past the end stops it gives with resistance.
+    const { stops } = fit.current;
+    let goal = stops[Math.min(stop, stops.length - 1)] - dragPx.current * fit.current.pxToWorld;
+    const lo = stops[0];
+    const hi = stops[stops.length - 1];
     if (goal < lo) goal = lo - (lo - goal) * 0.3;
     if (goal > hi) goal = hi + (goal - hi) * 0.3;
     const follow = dragPx.current !== 0 ? 20 : 6;
@@ -394,11 +544,11 @@ function CameraRig({ board, dragPx }: { board: number; dragPx: RefObject<number>
   return null;
 }
 
-export default function LifeScene({ board, dragPx }: { board: number; dragPx: RefObject<number> }) {
+export default function LifeScene({ stop, dragPx, onStops }: { stop: number; dragPx: RefObject<number>; onStops: (n: number) => void }) {
   return (
-    <Canvas shadows dpr={[1, 2]} camera={{ position: [BOARD_X[0], 0.6, 1.8], fov: 34, near: 0.02, far: 10 }} style={{ width: "100%", height: "100%" }}>
+    <Canvas shadows dpr={[1, 2]} camera={{ position: [BOARD_X[0], 0.6, 1.5], fov: 34, near: 0.02, far: 10 }} style={{ width: "100%", height: "100%" }}>
       <color attach="background" args={[WALL]} />
-      <CameraRig board={board} dragPx={dragPx} />
+      <CameraRig stop={stop} dragPx={dragPx} onStops={onStops} />
       {/* Same lighting as About: sky/bounce fill, window light from the left, late sun, soft front fill. */}
       <hemisphereLight args={["#f3f6fb", "#7b5b45", 1.25]} />
       <directionalLight position={[-1.2, 1.4, 0.8]} color="#fff4e0" intensity={1.0} />

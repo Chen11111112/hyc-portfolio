@@ -412,7 +412,7 @@ function Ball({ r, position, scale, color, roughness = 0.5 }: { r: number; posit
   );
 }
 
-export function Cat() {
+function Cat() {
   const fur = "#9a9da3";
   const belly = "#f1efe9";
   return (
@@ -434,7 +434,7 @@ export function Cat() {
   );
 }
 
-export function Dog() {
+function Dog() {
   const fur = "#d49a5a";
   const cream = "#f4e6d0";
   return (
