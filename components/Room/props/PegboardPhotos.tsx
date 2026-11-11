@@ -1,11 +1,12 @@
 "use client";
 
 import { useTexture } from "@react-three/drei";
-import { Suspense, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { CanvasTexture, SRGBColorSpace, type Texture } from "three";
 import { PEG_FACE_Z, PEG_H, PEG_W, PEG_X0, PEG_Y0 } from "../layout";
 import { ROOM_PHOTOS } from "../photos";
 import { Box, Cyl } from "./primitives";
+import SafeSuspense from "./SafeSuspense";
 
 const HOLE = 0.05;
 const FRAME_W = 0.086;
@@ -94,9 +95,9 @@ export default function PegboardPhotos() {
             <group position={[x, y, 0.014]} rotation={[0, 0, photo.tilt]}>
               <Box size={[FRAME_W, FRAME_H, 0.002]} color="#fbfaf6" roughness={0.6} />
               {photo.src ? (
-                <Suspense fallback={<PlaceholderPicture index={i} />}>
+                <SafeSuspense fallback={<PlaceholderPicture index={i} />}>
                   <LoadedPicture src={photo.src} />
-                </Suspense>
+                </SafeSuspense>
               ) : (
                 <PlaceholderPicture index={i} />
               )}

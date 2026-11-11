@@ -29,6 +29,8 @@ import {
   DeskLamp,
   Figurines,
   Laptop,
+  MathPapers,
+  NOTEBOOK_POS,
   MacMini,
   Mug,
   Microphone,
@@ -44,10 +46,22 @@ import {
 import GamingChair from "./props/GamingChair";
 import { Guitars, LegoPiano, PIANO_POS } from "./props/Instruments";
 import Marimba, { MARIMBA_X0, MARIMBA_X1 } from "./props/Marimba";
+import {
+  CERT_GRID,
+  CORK,
+  Certificate,
+  CorkBoard,
+  TROPHY_SHELF,
+  TrailMap,
+  TrophyShelf,
+  WHITEBOARD,
+  Whiteboard,
+} from "./props/BackWallExtras";
 import DysonFan from "./props/DysonFan";
 import MidiKeyboard from "./props/MidiKeyboard";
 import { Box } from "./props/primitives";
-import SheetCabinet from "./props/SheetCabinet";
+import SheetCabinet, { Nas, Turntable } from "./props/SheetCabinet";
+import { CLOCK, HandwrittenScores, PhotoString, WallClock } from "./props/SideWallExtras";
 import Skis, { SKIS_CX } from "./props/Skis";
 import WoodFloor from "./props/WoodFloor";
 import SkyView from "./props/SkyView";
@@ -55,6 +69,7 @@ import Outlets from "./props/Cables";
 import PegboardPhotos from "./props/PegboardPhotos";
 import Plants from "./props/Plants";
 import Posters from "./props/Posters";
+import { CERTIFICATES, MUSIC_HREF, ROOM_LINKS } from "@/lib/roomContent";
 import Clickable from "./Clickable";
 import { NightProvider, lerp, readStoredNight, storeNight, useNightMix } from "./nightMode";
 import styles from "./Room.module.scss";
@@ -109,7 +124,7 @@ const FRAME = [
   [DESK.x1 + 1.5, 0, 0.3],
   [DESK.x1 + 1.52, 1.8, 0.0],
   // Poster wall top row (starts at the pegboard's left edge)
-  [DESK.x1 + 1.2, 2.26, 0.0],
+  [DESK.x1 + 1.67, 2.26, 0.0],
   [PEG_X0, 2.26, 0.0],
   // Gaming chair
   [0.2, 0, 1.5],
@@ -501,7 +516,7 @@ function Pegboard() {
 
 /** Keeps the orbit target inside the room so panning can't wander off past the walls. */
 const TARGET_MIN = new Vector3(SIDE_X + 0.15, 0.2, 0.05);
-const TARGET_MAX = new Vector3(DESK.x1 + 1.35, 1.8, 2.5);
+const TARGET_MAX = new Vector3(DESK.x1 + 1.35, 1.9, 2.5);
 const LOOK_V = new Vector3(...LOOK);
 /** Fraction of the zoom range (from fully out) over which panning freedom ramps up to the full room. */
 const PAN_RAMP = 0.55;
@@ -582,6 +597,7 @@ function FillLights() {
 
 function Room({ resetRef, night }: { resetRef: MutableRefObject<(() => void) | null>; night: boolean }) {
   const controlsRef = useRef<OrbitControlsImpl>(null);
+  const [taipeiClock, setTaipeiClock] = useState(true);
   useEffect(() => {
     markBootReady();
   }, []);
@@ -614,54 +630,130 @@ function Room({ resetRef, night }: { resetRef: MutableRefObject<(() => void) | n
         <Wall />
         <Window />
         <SkyView opening={WIN} />
-        {/* Stood up in front of the window's left edge, leaning on the sill. */}
-        <MidiKeyboard x={WIN.x0 + 0.2} />
-        {/* Pulled off the wall so the music stand fits behind the bars. */}
-        <group position={[0, 0, 0.25]}>
-          <Clickable slug="marimba" label={[(MARIMBA_X0 + MARIMBA_X1) / 2, 1.5, 0.3]}>
+        <Clickable onSelect={() => setTaipeiClock((v) => !v)} title={taipeiClock ? "台北時間 · 點擊切換成你的時間" : "你的當地時間 · 點擊切換成台北時間"} label={[CLOCK.x, CLOCK.y + 0.2, 0.08]}>
+          <WallClock taipei={taipeiClock} />
+        </Clickable>
+        <Clickable href={MUSIC_HREF} title="興趣・作曲（YouTube）" label={[-2.96, 1.95, 0.08]}>
+          <HandwrittenScores />
+        </Clickable>
+        {/* 教學經歷 (workshop photos), same story as the pegboard. */}
+        <Clickable slug="teaching" label={[-3.15, 2.42, 0.08]}>
+          <PhotoString />
+        </Clickable>
+        {/* 作曲: marimba and the upright MIDI keyboard light up together. */}
+        <Clickable
+          href={ROOM_LINKS.marimba}
+          title="興趣・作曲"
+          label={[(MARIMBA_X0 + MARIMBA_X1) / 2, 1.55, 0.55]}
+          zones={[
+            { position: [(MARIMBA_X0 + MARIMBA_X1) / 2, 0.55, 0.6], size: [MARIMBA_X1 - MARIMBA_X0 + 0.14, 1.1, 0.82] },
+            { position: [WIN.x0 + 0.05, 0.66, 0.15], size: [0.4, 1.36, 0.24] },
+          ]}
+        >
+          {/* Stood up in front of the window's left edge, leaning on the sill. */}
+          <MidiKeyboard x={WIN.x0 + 0.2} />
+          {/* Pulled off the wall so the music stand fits behind the bars. */}
+          <group position={[0, 0, 0.25]}>
             <Marimba />
-          </Clickable>
-        </group>
+          </group>
+        </Clickable>
       </SideWallGroup>
       <Desk />
       <Shelves />
-      <Pegboard />
       <Outlets />
-      <Clickable slug="books" label={[0.05, 1.58, 0.12]}>
+      <Clickable href={ROOM_LINKS.bookshelf} title="Course 課程" label={[0.05, 1.58, 0.12]}>
         <ShelfContents />
         <DeskBooks />
       </Clickable>
       <DeskLamp />
       <MonitorRiser />
-      <Clickable slug="computer" label={[DESK_CX + 0.04, 1.42, 0.2]}>
+      {/* 專案經歷: every device on the desk lights up together. */}
+      <Clickable slug="projects" label={[DESK_CX + 0.04, 1.45, 0.2]} zones={[{ position: [DESK_CX + 0.04, 1.13, 0.14], size: [0.7, 0.45, 0.14] }]}>
         <Monitor />
         <MacMini />
         <Laptop />
+        <Tablet />
+        <Phone />
+        <Speaker />
       </Clickable>
-      <Tablet />
-      <Phone />
-      <Microphone />
       <Figurines />
       <Mug />
       <StationeryBasket />
       <Plants />
-      <Notebook />
-      <Speaker />
+      {/* 興趣・作曲: the microphone on its own. */}
+      <Clickable slug="composition" label={[0.22, DESK.top + 0.42, 0.4]} zones={[{ position: [0.22, DESK.top + 0.16, 0.4], size: [0.17, 0.34, 0.17] }]}>
+        <Microphone />
+      </Clickable>
+      {/* 數學: green notebook + scratch paper. */}
+      <Clickable href={ROOM_LINKS.notebook} title="數學" label={[NOTEBOOK_POS[0], DESK.top + 0.16, NOTEBOOK_POS[2]]} zones={[{ position: [NOTEBOOK_POS[0], DESK.top + 0.02, NOTEBOOK_POS[2]], size: [0.32, 0.05, 0.32] }]}>
+        <Notebook />
+        <MathPapers />
+      </Clickable>
       <PenHolder />
-      <Clickable slug="photos" label={[PEG_X0 + PEG_W / 2, PEG_Y0 + PEG_H + 0.06, 0.05]}>
+      <Clickable href={ROOM_LINKS.whiteboard} title="Next.js 開發" label={[WHITEBOARD.x, WHITEBOARD.y + 0.25, 0.08]} zones={[{ position: [WHITEBOARD.x, WHITEBOARD.y, 0.04], size: [WHITEBOARD.w + 0.06, WHITEBOARD.h + 0.06, 0.08] }]}>
+        <Whiteboard />
+      </Clickable>
+      {/* 教學活動記錄: the whole pegboard (board + photos). */}
+      <Clickable
+        slug="teaching"
+        label={[PEG_X0 + PEG_W / 2, PEG_Y0 + PEG_H + 0.05, 0.08]}
+        zones={[{ position: [PEG_X0 + PEG_W / 2, PEG_Y0 + PEG_H / 2, 0.05], size: [PEG_W + 0.03, PEG_H + 0.04, 0.1] }]}
+      >
+        <Pegboard />
         <PegboardPhotos />
       </Clickable>
       <Clickable slug="piano" label={[PIANO_POS[0], SHEET_CAB.h + 0.5, 0.3]}>
         <LegoPiano />
       </Clickable>
-      <Posters />
+      {/* 專案經歷: touching any poster lights them all. */}
+      <Clickable
+        slug="projects"
+        label={[1.88, 2.36, 0.08]}
+        zones={[
+          { position: [2.11, 2.045, 0.025], size: [2.76, 0.46, 0.05] },
+          { position: [2.19, 1.58, 0.025], size: [1.38, 0.44, 0.05] },
+        ]}
+      >
+        <Posters />
+      </Clickable>
+      {/* 證照: the 田 grid of certificates. */}
+      <Clickable
+        slug="certifications"
+        label={[CERT_GRID.cx, CERT_GRID.cy + CERT_GRID.h / 2 + 0.06, 0.06]}
+        zones={[{ position: [CERT_GRID.cx, CERT_GRID.cy, 0.03], size: [CERT_GRID.w + 0.05, CERT_GRID.h + 0.05, 0.06] }]}
+      >
+        {CERTIFICATES.map((c, i) => (
+          <Certificate key={c.name} index={i} />
+        ))}
+      </Clickable>
+      {/* 競賽經歷: trophy shelf above the bookshelf. */}
+      <Clickable
+        slug="competitions"
+        label={[TROPHY_SHELF.x0 + TROPHY_SHELF.w / 2, 1.93, 0.15]}
+        zones={[{ position: [TROPHY_SHELF.x0 + TROPHY_SHELF.w / 2, 1.69, 0.1], size: [TROPHY_SHELF.w + 0.04, 0.38, 0.2] }]}
+      >
+        <TrophyShelf />
+      </Clickable>
+      {/* 志工經歷 */}
+      <Clickable slug="volunteer" label={[CORK.x, CORK.y + 0.29, 0.06]} zones={[{ position: [CORK.x, CORK.y, 0.04], size: [0.44, 0.5, 0.08] }]}>
+        <CorkBoard />
+      </Clickable>
       <DysonFan />
-      <Clickable slug="snowboard" label={[SKIS_CX, 1.82, 0.12]}>
+      {/* 滑雪經歷: skis and the trail map pinned behind them light up together. */}
+      <Clickable slug="snowboard" label={[SKIS_CX, 1.82, 0.12]} zones={[{ position: [SKIS_CX, 0.85, 0.16], size: [0.56, 1.72, 0.32] }]}>
+        <TrailMap />
         <Skis />
       </Clickable>
       {/* Sheet-music cabinet + turntable, centred under the wall-hung guitars. */}
       <SheetCabinet x1={SHEET_CAB.x0 + SHEET_CAB.w} />
-      <Clickable slug="guitars" label={[SHEET_CAB_CX, 2.08, 0.2]}>
+      <Clickable href={ROOM_LINKS.turntable} title="Instagram" label={[SHEET_CAB.x0 + 0.235, SHEET_CAB.h + 0.42, 0.25]}>
+        <Turntable />
+      </Clickable>
+      <Clickable href={ROOM_LINKS.nas} title="後端與資料庫開發" label={[SHEET_CAB.x0 + SHEET_CAB.w / 4, SHEET_CAB.h + 0.04, 0.45]}>
+        <Nas />
+      </Clickable>
+      {/* 音樂經歷: both guitars, including the gap between them. */}
+      <Clickable slug="music" label={[SHEET_CAB_CX, 2.08, 0.2]} zones={[{ position: [SHEET_CAB_CX, 1.43, 0.11], size: [0.92, 1.06, 0.2] }]}>
         <Guitars />
       </Clickable>
       <GamingChair position={[DESK_CX - 0.05, 0, 1.12]} yaw={-0.8} />

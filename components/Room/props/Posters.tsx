@@ -1,10 +1,11 @@
 "use client";
 
 import { useTexture } from "@react-three/drei";
-import { Suspense } from "react";
+
 import { SRGBColorSpace } from "three";
 import { PEG_H, PEG_W, PEG_X0, PEG_Y0, rng, type Vec3 } from "../layout";
 import { Box } from "./primitives";
+import SafeSuspense from "./SafeSuspense";
 
 // Nine posters (public/1.png … 9.png) wrapped around the pegboard photo wall, starting at its left edge:
 // a top row of 5 above the pegboard, then a row of 4 beside it at the pegboard's height, running right
@@ -38,9 +39,10 @@ function PosterArt({ src }: { src: string }) {
 const LAYOUT = (() => {
   const rand = rng(17);
   return SOURCES.map((src, i) => {
-    const top = i < 5;
+    // Top row: 1–5 and 9 (9 moved up so it doesn't cover the trail map behind the skis); lower row: 6–8.
+    const top = i < 5 || i === 8;
     const x0 = top ? TOP_START_X : SIDE_START_X;
-    const col = top ? i : i - 5;
+    const col = i === 8 ? 5 : top ? i : i - 5;
     return {
       src,
       position: [
@@ -59,9 +61,9 @@ export default function Posters() {
       {LAYOUT.map((p) => (
         <group key={p.src} position={p.position} rotation={[0, 0, p.tilt]}>
           <Box size={[SIZE, SIZE, 0.002]} color="#f7f5ef" roughness={0.8} cast={false} />
-          <Suspense fallback={null}>
+          <SafeSuspense fallback={null}>
             <PosterArt src={p.src} />
-          </Suspense>
+          </SafeSuspense>
           {/* Masking tape on the top corners. */}
           {[-1, 1].map((s) => (
             <Box

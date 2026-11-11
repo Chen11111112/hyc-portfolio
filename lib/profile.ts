@@ -7,9 +7,11 @@ export const PROFILE_INTRO = {
   note: "Holder of several professional certifications. with distinctions earned in programming competitions",
 } as const;
 
-export type ProfileLink = { label: string; href: string; display: string };
+/** `internal` links stay in this site (same tab); the rest open in a new tab. */
+export type ProfileLink = { label: string; href: string; display: string; internal?: boolean };
 
 export const PROFILE_LINKS: ProfileLink[] = [
+  { label: "About", href: "/about", display: "專案・競賽・教學・志工・興趣・證照", internal: true },
   { label: "Course", href: "https://course.hychen.space/", display: "course.hychen.space" },
   { label: "Program", href: "https://hyc.eshachem.com/program", display: "hyc.eshachem.com/program" },
   { label: "Instagram", href: "https://www.instagram.com/hy.chen._.1029/", display: "@hy.chen._.1029" },

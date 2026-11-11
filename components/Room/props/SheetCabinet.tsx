@@ -14,7 +14,7 @@ const H = SHEET_CAB.h;
 const WOOD = { color: "#4a2f20", roughness: 0.55 };
 const FRONT = { color: "#5a3a28", roughness: 0.5 };
 
-function Turntable() {
+function TurntableModel() {
   const platter = useRef<Group>(null);
   // 33⅓ rpm.
   useFrame((_, dt) => {
@@ -108,6 +108,63 @@ function Compartment({ seed, floorY, cx, cz, width }: { seed: number; floorY: nu
  * vertical divider into left and right compartments, with a vinyl turntable on top.
  * Wall at z = 0, room toward +z; `x1` is the right-hand edge.
  */
+const T_BOARD = 0.022;
+/** Cabinet x1 (right edge) used by the scene: just right of the desk. */
+const X1 = SHEET_CAB.x0 + SHEET_CAB.w;
+const CX = X1 - W / 2;
+const CZ = 0.01 + D / 2;
+
+/** Turntable on the left of the cabinet top (its own clickable in the scene). */
+export function Turntable() {
+  return (
+    <group position={[CX - W / 2 + 0.235, H, CZ + 0.01]}>
+      <TurntableModel />
+    </group>
+  );
+}
+
+/** 4-bay NAS in the cabinet's left compartment, front facing the room. */
+export function Nas() {
+  const floorY = T_BOARD / 2 + 0.03 + T_BOARD / 2;
+  // Fills most of the left compartment (~0.44 w × 0.38 h × 0.41 d inside).
+  const w = 0.3;
+  const h = 0.3;
+  const d = 0.3;
+  const bays = 4;
+  const bayW = (w - 0.075) / bays;
+  const body = { color: "#1b1c1f", roughness: 0.45, metalness: 0.2 };
+  return (
+    <group position={[CX - W / 4 + T_BOARD / 4, floorY, CZ - 0.02]}>
+      <Box size={[w, h, d]} position={[0, h / 2, 0]} {...body} />
+      {/* Hot-swap bay doors with vent slots and a drive LED each. */}
+      {Array.from({ length: bays }, (_, i) => {
+        const x = -w / 2 + 0.018 + bayW * (i + 0.5);
+        return (
+          <group key={i} position={[x, h * 0.5, d / 2 + 0.001]}>
+            <Box size={[bayW - 0.006, h * 0.74, 0.005]} color="#2a2c30" roughness={0.5} metalness={0.3} cast={false} />
+            {[-0.075, -0.05, -0.025, 0, 0.025].map((y) => (
+              <Box key={y} size={[bayW * 0.6, 0.004, 0.001]} position={[0, y, 0.003]} color="#111" cast={false} />
+            ))}
+            <Box size={[0.008, 0.008, 0.001]} position={[0, h * 0.3, 0.003]} color="#3ddc84" emissive="#3ddc84" emissiveIntensity={0.9} cast={false} />
+          </group>
+        );
+      })}
+      {/* Status LEDs, power button and USB port down the right edge. */}
+      {[
+        { y: h * 0.84, c: "#3ddc84" },
+        { y: h * 0.78, c: "#4aa3ff" },
+      ].map((l) => (
+        <Box key={l.y} size={[0.008, 0.008, 0.002]} position={[w / 2 - 0.022, l.y, d / 2 + 0.002]} color={l.c} emissive={l.c} emissiveIntensity={0.9} cast={false} />
+      ))}
+      <Cyl r={0.01} h={0.005} position={[w / 2 - 0.022, h * 0.18, d / 2 + 0.002]} rotation={[Math.PI / 2, 0, 0]} color="#c9ccd0" metalness={0.8} roughness={0.3} cast={false} />
+      <Box size={[0.014, 0.006, 0.002]} position={[w / 2 - 0.022, h * 0.32, d / 2 + 0.002]} color="#0d0d0f" cast={false} />
+      <Box size={[w, 0.008, d]} position={[0, 0.004, 0]} color="#111" roughness={0.8} cast={false} />
+      {/* Ethernet cable out the back. */}
+      <Box size={[0.009, 0.009, 0.05]} position={[-0.08, 0.06, -d / 2 - 0.025]} color="#2f6fd6" cast={false} />
+    </group>
+  );
+}
+
 export default function SheetCabinet({ x1 }: { x1: number }) {
   const cx = x1 - W / 2;
   const cz = 0.01 + D / 2;
@@ -128,12 +185,8 @@ export default function SheetCabinet({ x1 }: { x1: number }) {
       {/* Kick plate, back panel. */}
       <Box size={[W - T * 2, 0.03, T]} position={[cx, 0.015, cz + D / 2 - T]} color="#2e1d14" roughness={0.6} />
       <Box size={[W, H, 0.008]} position={[cx, H / 2, cz - D / 2 + 0.004]} color="#3e271b" roughness={0.6} />
-      <Compartment seed={11} floorY={floorY} cx={cx - W / 4 + T / 4} cz={cz + 0.02} width={compW} />
+      {/* Left compartment holds the NAS (placed by the scene); right compartment holds scores. */}
       <Compartment seed={29} floorY={floorY} cx={cx + W / 4 - T / 4} cz={cz + 0.02} width={compW} />
-      {/* Top: turntable on the left; the LEGO grand piano (placed by the scene) fills the right half. */}
-      <group position={[cx - W / 2 + 0.235, H, cz + 0.01]}>
-        <Turntable />
-      </group>
       {/* A couple of record sleeves leaning against the left side, in the gap by the desk. */}
       {[
         { c: "#e3b23c", dz: 0.0 },

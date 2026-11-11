@@ -2,11 +2,13 @@
 
 import { RoundedBox, useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { CanvasTexture, DoubleSide, SRGBColorSpace, type MeshStandardMaterial, type PointLight } from "three";
 import { DESK, DESK_CX, SHELF_W, SHELF_X0, type Vec3 } from "../layout";
 import { lerp, useNightMix } from "../nightMode";
+import { useCanvasTexture, type Draw } from "./canvasTexture";
 import { Box, Cyl, Rod } from "./primitives";
+import SafeSuspense from "./SafeSuspense";
 
 const TOP = DESK.top;
 const ALU = { color: "#a9aeb3", roughness: 0.32, metalness: 0.65 };
@@ -123,9 +125,11 @@ export function Laptop() {
 }
 
 /** Green notebook with a pencil, in front of the speaker. */
+export const NOTEBOOK_POS: Vec3 = [DESK.x1 - 0.24, TOP, 0.56];
+
 export function Notebook() {
   return (
-    <group position={[DESK.x1 - 0.24, TOP, 0.56]} rotation={[0, 0.28, 0]}>
+    <group position={NOTEBOOK_POS} rotation={[0, 0.28, 0]}>
       <Box size={[0.15, 0.009, 0.21]} position={[0, 0.0045, 0]} color="#1f5a3c" roughness={0.7} />
       <Box size={[0.144, 0.007, 0.204]} position={[0.002, 0.0045, 0]} color="#f2eee3" roughness={0.9} cast={false} />
       <Box size={[0.152, 0.0012, 0.01]} position={[0, 0.0095, -0.06]} color="#123825" roughness={0.6} cast={false} />
@@ -231,9 +235,9 @@ export function Monitor() {
       <group position={[0, panelY, -0.01]}>
         <Box size={[w, h, 0.018]} color="#1b1c1f" roughness={0.45} />
         <Box size={[w * 0.5, h * 0.5, 0.03]} position={[0, -0.02, -0.02]} color="#1b1c1f" roughness={0.45} />
-        <Suspense fallback={<Box size={[w - 0.016, h - 0.03, 0.001]} position={[0, 0.006, 0.0095]} color="#0b0c0e" cast={false} />}>
+        <SafeSuspense fallback={<Box size={[w - 0.016, h - 0.03, 0.001]} position={[0, 0.006, 0.0095]} color="#0b0c0e" cast={false} />}>
           <SiteScreen w={w - 0.016} h={(w - 0.016) * (9 / 16)} />
-        </Suspense>
+        </SafeSuspense>
       </group>
     </group>
   );
@@ -353,9 +357,9 @@ export function Mug() {
             <meshStandardMaterial color="#f7f6f2" roughness={0.28} />
           </mesh>
         </group>
-        <Suspense fallback={null}>
+        <SafeSuspense fallback={null}>
           <MugLogo />
-        </Suspense>
+        </SafeSuspense>
       </group>
     </group>
   );
@@ -576,6 +580,105 @@ export function StationeryBasket() {
       <BinderClip position={[ORG_SPLIT_X + 0.025, t + 0.012, d / 2 - 0.016]} rotation={[0, -0.7, 0]} color="#d64545" />
       {/* One clip pinched onto the front rim. */}
       <BinderClip position={[0.045, h - 0.012, d / 2 + 0.004]} color="#2f6fd6" />
+    </group>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Math scratch paper fanned out under the green notebook.            */
+/* ------------------------------------------------------------------ */
+
+function mathDraw(variant: number): Draw {
+  return (ctx, w, h) => {
+    ctx.fillStyle = "#fbfbf7";
+    ctx.fillRect(0, 0, w, h);
+    // Blue grid.
+    ctx.strokeStyle = "rgba(90,140,200,0.28)";
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= w; x += 15) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, h);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= h; y += 15) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+    }
+    const pencil = "rgba(40,40,52,0.9)";
+    ctx.fillStyle = pencil;
+    ctx.strokeStyle = pencil;
+    ctx.lineWidth = 2;
+    ctx.font = `20px "Bradley Hand", "Segoe Print", "Comic Sans MS", cursive`;
+    const lines: string[][] = [
+      ["f(x) = ax² + bx + c", "Δ = b² − 4ac", "x = (−b ± √Δ) / 2a", "", "x² − 5x + 6 = 0", "(x − 2)(x − 3) = 0", "x = 2, 3 ✓"],
+      ["∫ x² dx = x³/3 + C", "", "∫₀¹ (2x + 1) dx", "= [x² + x]₀¹", "= 2", "", "d/dx sin x = cos x"],
+      ["sin²θ + cos²θ = 1", "", "a² + b² = c²", "3² + 4² = 5²", "", "Σ k = n(n+1)/2", "n = 10 → 55"],
+    ];
+    lines[variant % lines.length].forEach((t, i) => ctx.fillText(t, 22, 46 + i * 34));
+    if (variant % 3 === 0) {
+      // Parabola sketch with axes.
+      const ox = w - 90;
+      const oy = h - 70;
+      ctx.beginPath();
+      ctx.moveTo(ox - 60, oy);
+      ctx.lineTo(ox + 60, oy);
+      ctx.moveTo(ox, oy + 20);
+      ctx.lineTo(ox, oy - 110);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(200,60,60,0.85)";
+      ctx.beginPath();
+      for (let x = -50; x <= 50; x += 4) {
+        const y = (x * x) / 28 - 40;
+        if (x === -50) ctx.moveTo(ox + x, oy + y);
+        else ctx.lineTo(ox + x, oy + y);
+      }
+      ctx.stroke();
+    } else if (variant % 3 === 2) {
+      // Right triangle with labels.
+      ctx.beginPath();
+      ctx.moveTo(w - 160, h - 40);
+      ctx.lineTo(w - 40, h - 40);
+      ctx.lineTo(w - 40, h - 130);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.fillText("θ", w - 145, h - 48);
+      ctx.fillText("c", w - 110, h - 95);
+    } else {
+      // Boxed answer.
+      ctx.strokeStyle = "rgba(200,60,60,0.85)";
+      ctx.strokeRect(16, 46 + 3 * 34 - 24, 70, 32);
+    }
+  };
+}
+
+const SHEETS: { offset: Vec3; yaw: number; variant: number }[] = [
+  // Offsets keep every sheet on the desktop (front edge z ≈ 0.70, right edge x = DESK.x1).
+  { offset: [0.07, 0.0004, 0.02], yaw: 0.65, variant: 0 },
+  { offset: [-0.06, 0.0008, 0.0], yaw: -0.25, variant: 1 },
+  { offset: [0.02, 0.0012, -0.08], yaw: 0.1, variant: 2 },
+];
+
+function MathSheet({ offset, yaw, variant }: (typeof SHEETS)[number]) {
+  const draw = useMemo(() => mathDraw(variant), [variant]);
+  const map = useCanvasTexture(draw, 300, 420);
+  return (
+    <mesh position={offset} rotation={[-Math.PI / 2, 0, yaw]} receiveShadow>
+      <planeGeometry args={[0.14, 0.196]} />
+      <meshStandardMaterial map={map} roughness={0.9} />
+    </mesh>
+  );
+}
+
+/** A few sheets of calculation paper fanned out under the green notebook. */
+export function MathPapers() {
+  return (
+    <group position={NOTEBOOK_POS}>
+      {SHEETS.map((s) => (
+        <MathSheet key={s.variant} {...s} />
+      ))}
     </group>
   );
 }

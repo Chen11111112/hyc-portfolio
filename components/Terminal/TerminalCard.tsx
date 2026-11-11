@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type CSSProperties } from "react";
 import { PROFILE_INTRO, PROFILE_LINKS } from "@/lib/profile";
 import styles from "./TerminalCard.module.scss";
@@ -76,13 +77,23 @@ export default function TerminalCard() {
         <ul className={styles.links}>
           {PROFILE_LINKS.map((l, i) => (
             <li key={l.label} className={styles.line} style={out(i, links)}>
-              <a href={l.href} target="_blank" rel="noopener noreferrer" className={styles.link}>
-                <span className={styles.arrow} aria-hidden>
-                  →
-                </span>
-                <span className={styles.label}>{l.label}</span>
-                <span className={styles.display}>{l.display}</span>
-              </a>
+              {l.internal ? (
+                <Link href={l.href} className={styles.link}>
+                  <span className={styles.arrow} aria-hidden>
+                    →
+                  </span>
+                  <span className={styles.label}>{l.label}</span>
+                  <span className={styles.display}>{l.display}</span>
+                </Link>
+              ) : (
+                <a href={l.href} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                  <span className={styles.arrow} aria-hidden>
+                    →
+                  </span>
+                  <span className={styles.label}>{l.label}</span>
+                  <span className={styles.display}>{l.display}</span>
+                </a>
+              )}
             </li>
           ))}
         </ul>

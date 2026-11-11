@@ -39,6 +39,7 @@ function ProjectExperienceTable() {
 
 function SectionBlock({ section }: { section: AboutSection }) {
   if (section.heading === "自我介紹") return null;
+  if (section.lines.length === 0 && section.heading !== "專案經歷") return null;
 
   if (section.heading === "專案經歷") {
     return (
