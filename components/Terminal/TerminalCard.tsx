@@ -78,7 +78,7 @@ export default function TerminalCard() {
           {PROFILE_LINKS.map((l, i) => (
             <li key={l.label} className={styles.line} style={out(i, links)}>
               {l.internal ? (
-                <Link href={l.href} className={styles.link}>
+                <Link href={l.href} className={l.featured ? `${styles.link} ${styles.linkFeatured}` : styles.link}>
                   <span className={styles.arrow} aria-hidden>
                     →
                   </span>
@@ -86,7 +86,7 @@ export default function TerminalCard() {
                   <span className={styles.display}>{l.display}</span>
                 </Link>
               ) : (
-                <a href={l.href} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                <a href={l.href} target="_blank" rel="noopener noreferrer" className={l.featured ? `${styles.link} ${styles.linkFeatured}` : styles.link}>
                   <span className={styles.arrow} aria-hidden>
                     →
                   </span>

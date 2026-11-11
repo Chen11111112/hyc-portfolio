@@ -83,10 +83,11 @@ export default function LegoPlant({
   return (
     <group>
       {/* Brick pot with a rim and studded soil plate. */}
-      <Box size={[POT.w, POT.h, POT.w]} position={[0, POT.h / 2, 0]} color={pot} {...PLASTIC} />
+      {/* Tops are deliberately at three different heights: coplanar faces z-fight and flicker. */}
+      <Box size={[POT.w, POT.h - 0.006, POT.w]} position={[0, (POT.h - 0.006) / 2, 0]} color={pot} {...PLASTIC} />
       <Box size={[POT.w + 0.008, 0.016, POT.w + 0.008]} position={[0, POT.h - 0.008, 0]} color={rim} {...PLASTIC} />
-      <Box size={[POT.w - 0.012, 0.004, POT.w - 0.012]} position={[0, soilY + 0.006, 0]} color="#3b2a1e" {...PLASTIC} cast={false} />
-      <Studs cols={5} rows={5} pitch={0.02} y={soilY + 0.008} color="#3b2a1e" />
+      <Box size={[POT.w - 0.012, 0.006, POT.w - 0.012]} position={[0, POT.h, 0]} color="#3b2a1e" {...PLASTIC} cast={false} />
+      <Studs cols={5} rows={5} pitch={0.02} y={POT.h + 0.003} color="#3b2a1e" />
       {/* Stems, leaves and flowers. */}
       {stems.map((s) => (
         <group key={`${s.x}${s.z}`} position={[s.x, soilY + 0.008, s.z]} rotation={s.tilt}>

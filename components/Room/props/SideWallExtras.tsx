@@ -7,6 +7,7 @@ import { CatmullRomCurve3, SRGBColorSpace, TubeGeometry, Vector3, type Group, ty
 import { WORKSHOP_PHOTOS } from "@/lib/roomContent";
 import { rng } from "../layout";
 import { useCanvasTexture, type Draw } from "./canvasTexture";
+import { mathDraw } from "./DeskItems";
 import { Box, Cyl } from "./primitives";
 import SafeSuspense from "./SafeSuspense";
 
@@ -278,6 +279,82 @@ export function PhotoString() {
           </group>
         );
       })}
+    </group>
+  );
+}
+
+/* ------------------- Scratch paper + sticky notes under the window ------------------- */
+
+const WALL_SHEETS: { x: number; y: number; tilt: number; variant: number }[] = [
+  { x: -1.5, y: 0.5, tilt: 0.05, variant: 1 },
+  { x: -1.27, y: 0.47, tilt: -0.04, variant: 0 },
+  { x: -1.04, y: 0.51, tilt: 0.03, variant: 2 },
+];
+
+const STICKIES: { x: number; y: number; tilt: number; text: string; color: string }[] = [
+  { x: -1.62, y: 0.68, tilt: -0.08, text: "Next.js", color: "#f7e26b" },
+  { x: -1.385, y: 0.69, tilt: 0.06, text: "API\nroutes", color: "#9fd8f0" },
+  { x: -1.155, y: 0.7, tilt: -0.05, text: "DB\nschema", color: "#f5a8c4" },
+  { x: -0.9, y: 0.68, tilt: 0.07, text: "deploy ✓", color: "#b9e6a0" },
+  { x: -1.62, y: 0.33, tilt: 0.05, text: "bug fix", color: "#f5a8c4" },
+  { x: -0.86, y: 0.36, tilt: -0.06, text: "refactor", color: "#f7e26b" },
+];
+
+function stickyDraw(text: string, color: string): Draw {
+  return (ctx, w) => {
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, w, w);
+    ctx.fillStyle = "#2b2b2b";
+    ctx.textAlign = "center";
+    ctx.font = `bold 26px "Bradley Hand", "Segoe Print", "Comic Sans MS", cursive`;
+    const lines = text.split("\n");
+    lines.forEach((l, i) => ctx.fillText(l, w / 2, w / 2 - (lines.length - 1) * 16 + i * 32 + 8));
+  };
+}
+
+function WallSheet({ x, y, tilt, variant }: (typeof WALL_SHEETS)[number]) {
+  const draw = useMemo(() => mathDraw(variant), [variant]);
+  const map = useCanvasTexture(draw, 300, 420);
+  return (
+    <group position={[x, y, 0.004]} rotation={[0, 0, tilt]}>
+      <mesh receiveShadow>
+        <planeGeometry args={[0.17, 0.238]} />
+        <meshStandardMaterial map={map} roughness={0.9} />
+      </mesh>
+      {[-1, 1].map((s) => (
+        <mesh key={s} position={[s * 0.06, 0.112, 0.002]} rotation={[0, 0, s * 0.5]}>
+          <planeGeometry args={[0.04, 0.014]} />
+          <meshStandardMaterial color="#efe4c4" roughness={0.9} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function Sticky({ x, y, tilt, text, color }: (typeof STICKIES)[number]) {
+  const draw = useMemo(() => stickyDraw(text, color), [text, color]);
+  const map = useCanvasTexture(draw, 160, 160);
+  return (
+    <mesh position={[x, y, 0.006]} rotation={[0, 0, tilt]}>
+      <planeGeometry args={[0.078, 0.078]} />
+      <meshStandardMaterial map={map} roughness={0.85} />
+    </mesh>
+  );
+}
+
+/** Centre and size of the notes area, for the hover zone. */
+export const WALL_NOTES = { x: -1.26, y: 0.51, w: 0.95, h: 0.52 };
+
+/** Scratch paper and sticky notes taped to the wall below the window. */
+export function WallNotes() {
+  return (
+    <group>
+      {WALL_SHEETS.map((s) => (
+        <WallSheet key={s.variant} {...s} />
+      ))}
+      {STICKIES.map((s) => (
+        <Sticky key={`${s.x},${s.y}`} {...s} />
+      ))}
     </group>
   );
 }

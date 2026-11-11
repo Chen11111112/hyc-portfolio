@@ -141,6 +141,23 @@
   backdrop-filter: blur(8px);
 }
 
+/* Story photos: side by side at the top of the panel, wrapping on narrow screens. */
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0 0 20px;
+}
+
+.photo {
+  flex: 1 1 0;
+  min-width: 140px;
+  max-width: 300px;
+  height: auto;
+  border-radius: 10px;
+  background: #222227;
+}
+
 .kicker {
   margin: 0;
   color: #8e8a82;
@@ -314,30 +331,124 @@
   font-size: 12px;
 }
 
-/* Phones / narrow: the desk scene is a block at the top; header and panel flow below it. */
+/* Phones / narrow: the desk scene stays pinned at the top; header and panel scroll beneath it. */
 @media (max-width: 760px) {
   .scene {
-    position: relative;
-    height: 46vh;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    height: 40vh;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
   }
 
   .overlay {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
     min-height: 0;
-    padding-top: 20px;
+    padding: 14px 14px 32px;
   }
 
   .header {
     max-width: none;
+    width: auto;
+  }
+
+  .back {
+    margin-bottom: 6px;
+  }
+
+  .title {
+    font-size: 30px;
+  }
+
+  .intro {
+    margin-top: 6px;
+    font-size: 14px;
+  }
+
+  /* One swipeable row instead of three wrapped lines. */
+  .tabs {
+    flex-wrap: nowrap;
+    margin: 12px -14px 0;
+    padding: 0 14px 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .tab {
+    flex: none;
+  }
+
+  .hint {
+    display: none;
   }
 
   .panel {
     max-height: none;
     overflow: visible;
+    padding: 18px 16px;
   }
 
   .item {
     flex-direction: column;
     gap: 2px;
+  }
+}
+
+/* Entrance: header pieces rise in one after another, the panel slides in from the right. */
+.back,
+.title,
+.intro,
+.tabs,
+.hint {
+  animation: rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.title {
+  animation-delay: 0.08s;
+}
+
+.intro {
+  animation-delay: 0.16s;
+}
+
+.tabs {
+  animation-delay: 0.24s;
+}
+
+.hint {
+  animation-delay: 0.9s;
+}
+
+.content {
+  animation: slideIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(36px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .back,
+  .title,
+  .intro,
+  .tabs,
+  .hint,
+  .content {
+    animation: none;
   }
 }

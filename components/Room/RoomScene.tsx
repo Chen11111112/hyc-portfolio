@@ -60,8 +60,9 @@ import {
 import DysonFan from "./props/DysonFan";
 import MidiKeyboard from "./props/MidiKeyboard";
 import { Box } from "./props/primitives";
-import SheetCabinet, { Nas, Turntable } from "./props/SheetCabinet";
-import { CLOCK, HandwrittenScores, PhotoString, WallClock } from "./props/SideWallExtras";
+import SheetCabinet, { MathTextbooks, Nas, Turntable } from "./props/SheetCabinet";
+import { Football, GuitarFootstool } from "./props/UnderDesk";
+import { CLOCK, HandwrittenScores, PhotoString, WALL_NOTES, WallClock, WallNotes } from "./props/SideWallExtras";
 import Skis, { SKIS_CX } from "./props/Skis";
 import WoodFloor from "./props/WoodFloor";
 import SkyView from "./props/SkyView";
@@ -633,6 +634,15 @@ function Room({ resetRef, night }: { resetRef: MutableRefObject<(() => void) | n
         <Clickable onSelect={() => setTaipeiClock((v) => !v)} title={taipeiClock ? "台北時間 · 點擊切換成你的時間" : "你的當地時間 · 點擊切換成台北時間"} label={[CLOCK.x, CLOCK.y + 0.2, 0.08]}>
           <WallClock taipei={taipeiClock} />
         </Clickable>
+        {/* Scratch paper + sticky notes under the window → Program. */}
+        <Clickable
+          href={ROOM_LINKS.program}
+          title="Program 程式"
+          label={[WALL_NOTES.x, WALL_NOTES.y + 0.32, 0.08]}
+          zones={[{ position: [WALL_NOTES.x, WALL_NOTES.y, 0.03], size: [WALL_NOTES.w, WALL_NOTES.h, 0.06] }]}
+        >
+          <WallNotes />
+        </Clickable>
         <Clickable href={MUSIC_HREF} title="興趣・作曲（YouTube）" label={[-2.96, 1.95, 0.08]}>
           <HandwrittenScores />
         </Clickable>
@@ -681,11 +691,11 @@ function Room({ resetRef, night }: { resetRef: MutableRefObject<(() => void) | n
       <StationeryBasket />
       <Plants />
       {/* 興趣・作曲: the microphone on its own. */}
-      <Clickable slug="composition" label={[0.22, DESK.top + 0.42, 0.4]} zones={[{ position: [0.22, DESK.top + 0.16, 0.4], size: [0.17, 0.34, 0.17] }]}>
+      <Clickable href={ROOM_LINKS.microphone} title="興趣・作曲" label={[0.22, DESK.top + 0.42, 0.4]} zones={[{ position: [0.22, DESK.top + 0.16, 0.4], size: [0.17, 0.34, 0.17] }]}>
         <Microphone />
       </Clickable>
       {/* 數學: green notebook + scratch paper. */}
-      <Clickable href={ROOM_LINKS.notebook} title="數學" label={[NOTEBOOK_POS[0], DESK.top + 0.16, NOTEBOOK_POS[2]]} zones={[{ position: [NOTEBOOK_POS[0], DESK.top + 0.02, NOTEBOOK_POS[2]], size: [0.32, 0.05, 0.32] }]}>
+      <Clickable href={ROOM_LINKS.blog} title="Blog 部落格" label={[NOTEBOOK_POS[0], DESK.top + 0.16, NOTEBOOK_POS[2]]} zones={[{ position: [NOTEBOOK_POS[0], DESK.top + 0.02, NOTEBOOK_POS[2]], size: [0.32, 0.05, 0.32] }]}>
         <Notebook />
         <MathPapers />
       </Clickable>
@@ -704,7 +714,7 @@ function Room({ resetRef, night }: { resetRef: MutableRefObject<(() => void) | n
         <PegboardPhotos />
       </Clickable>
       {/* LEGO piano → 興趣經歷 › 其他 (單車環島、打工換宿…) on /about. */}
-      <Clickable href="/about#interests-other" title="興趣・其他" label={[PIANO_POS[0], SHEET_CAB.h + 0.5, 0.3]}>
+      <Clickable href="/about#music" title="音樂經歷" label={[PIANO_POS[0], SHEET_CAB.h + 0.5, 0.3]}>
         <LegoPiano />
       </Clickable>
       {/* 專案經歷: touching any poster lights them all → the 專案經歷 book on /about. */}
@@ -754,11 +764,18 @@ function Room({ resetRef, night }: { resetRef: MutableRefObject<(() => void) | n
       <Clickable href={ROOM_LINKS.turntable} title="Instagram" label={[SHEET_CAB.x0 + 0.235, SHEET_CAB.h + 0.42, 0.25]}>
         <Turntable />
       </Clickable>
-      <Clickable href={ROOM_LINKS.nas} title="後端與資料庫開發" label={[SHEET_CAB.x0 + SHEET_CAB.w / 4, SHEET_CAB.h + 0.04, 0.45]}>
-        <Nas />
+      {/* Math textbooks in the cabinet under the turntable → math notes. */}
+      <Clickable href={ROOM_LINKS.math} title="數學" label={[SHEET_CAB.x0 + SHEET_CAB.w / 4, SHEET_CAB.h + 0.04, 0.45]}>
+        <MathTextbooks />
       </Clickable>
+      {/* Under the desk: NAS, football, classical-guitar footstool. */}
+      <Clickable href={ROOM_LINKS.nas} title="後端與資料庫開發" label={[DESK.x1 - 0.32, 0.42, 0.5]}>
+        <Nas position={[DESK.x1 - 0.32, 0, 0.3]} />
+      </Clickable>
+      <Football position={[DESK.x0 + 0.62, 0, 0.3]} />
+      <GuitarFootstool position={[DESK_CX + 0.1, 0, 0.42]} yaw={0.15} />
       {/* 音樂經歷: both guitars, including the gap between them → 興趣經歷 › 音樂 on /about. */}
-      <Clickable href="/about#interests-music" title="興趣・音樂" label={[SHEET_CAB_CX, 2.08, 0.2]} zones={[{ position: [SHEET_CAB_CX, 1.43, 0.11], size: [0.92, 1.06, 0.2] }]}>
+      <Clickable href="/about#music" title="音樂經歷" label={[SHEET_CAB_CX, 2.08, 0.2]} zones={[{ position: [SHEET_CAB_CX, 1.43, 0.11], size: [0.92, 1.06, 0.2] }]}>
         <Guitars />
       </Clickable>
       <GamingChair position={[DESK_CX - 0.05, 0, 1.12]} yaw={-0.8} />

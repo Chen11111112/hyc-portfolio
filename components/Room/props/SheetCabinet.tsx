@@ -1,9 +1,10 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { DoubleSide, type Group } from "three";
 import { SHEET_CAB, rng } from "../layout";
+import { useCanvasTexture, type Draw } from "./canvasTexture";
 import { Box, Cyl, Rod } from "./primitives";
 
 // Horizontal 日-shaped open sheet-music cabinet right of the desk, under the wall-hung guitars.
@@ -124,10 +125,67 @@ export function Turntable() {
   );
 }
 
-/** 4-bay NAS in the cabinet's left compartment, front facing the room. */
-export function Nas() {
+const MATH_BOOKS = [
+  { title: "微積分", color: "#2f4858", t: 0.06, h: 0.3 },
+  { title: "線性代數", color: "#8c2f2f", t: 0.05, h: 0.28 },
+  { title: "離散數學", color: "#3d5a40", t: 0.045, h: 0.31 },
+  { title: "機率統計", color: "#b0832f", t: 0.055, h: 0.29 },
+  { title: "高中數學", color: "#3d3a4b", t: 0.04, h: 0.27 },
+];
+
+function spineDraw(title: string, color: string): Draw {
+  return (ctx, w, h) => {
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = "rgba(255,255,255,0.15)";
+    ctx.fillRect(0, 40, w, 6);
+    ctx.fillRect(0, h - 46, w, 6);
+    ctx.fillStyle = "#f3e2b4";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `bold 58px "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif`;
+    [...title].forEach((ch, i) => ctx.fillText(ch, w / 2, 110 + i * 68));
+    ctx.font = "600 22px Helvetica, Arial, sans-serif";
+    ctx.fillText("MATH", w / 2, h - 80);
+  };
+}
+
+function MathBook({ index, x }: { index: number; x: number }) {
+  const b = MATH_BOOKS[index];
+  const draw = useMemo(() => spineDraw(b.title, b.color), [b]);
+  const spine = useCanvasTexture(draw, 128, 560);
+  const d = 0.22;
+  return (
+    <mesh position={[x, b.h / 2, 0]} castShadow receiveShadow>
+      <boxGeometry args={[b.t, b.h, d]} />
+      <meshStandardMaterial attach="material-0" color={b.color} roughness={0.6} />
+      <meshStandardMaterial attach="material-1" color={b.color} roughness={0.6} />
+      <meshStandardMaterial attach="material-2" color="#f1ead8" roughness={0.9} />
+      <meshStandardMaterial attach="material-3" color="#f1ead8" roughness={0.9} />
+      <meshStandardMaterial attach="material-4" map={spine} roughness={0.55} />
+      <meshStandardMaterial attach="material-5" color="#f1ead8" roughness={0.9} />
+    </mesh>
+  );
+}
+
+/** Math textbooks standing in the cabinet's left compartment (under the turntable), spines out. */
+export function MathTextbooks() {
   const floorY = T_BOARD / 2 + 0.03 + T_BOARD / 2;
-  // Fills most of the left compartment (~0.44 w × 0.38 h × 0.41 d inside).
+  const gap = 0.004;
+  const total = MATH_BOOKS.reduce((n, b) => n + b.t + gap, 0);
+  // Left edge of book i = everything before it; centre = that + half its thickness.
+  const centre = (i: number) => -total / 2 + MATH_BOOKS.slice(0, i).reduce((n, b) => n + b.t + gap, 0) + MATH_BOOKS[i].t / 2;
+  return (
+    <group position={[CX - W / 4 + T_BOARD / 4, floorY, CZ + 0.06]}>
+      {MATH_BOOKS.map((b, i) => (
+        <MathBook key={b.title} index={i} x={centre(i)} />
+      ))}
+    </group>
+  );
+}
+
+/** 4-bay NAS; origin at the centre of its base, front facing +z. */
+export function Nas({ position }: { position: [number, number, number] }) {
   const w = 0.3;
   const h = 0.3;
   const d = 0.3;
@@ -135,7 +193,7 @@ export function Nas() {
   const bayW = (w - 0.075) / bays;
   const body = { color: "#1b1c1f", roughness: 0.45, metalness: 0.2 };
   return (
-    <group position={[CX - W / 4 + T_BOARD / 4, floorY, CZ - 0.02]}>
+    <group position={position}>
       <Box size={[w, h, d]} position={[0, h / 2, 0]} {...body} />
       {/* Hot-swap bay doors with vent slots and a drive LED each. */}
       {Array.from({ length: bays }, (_, i) => {
@@ -186,7 +244,7 @@ export default function SheetCabinet({ x1 }: { x1: number }) {
       {/* Kick plate, back panel. */}
       <Box size={[W - T * 2, 0.03, T]} position={[cx, 0.015, cz + D / 2 - T]} color="#2e1d14" roughness={0.6} />
       <Box size={[W, H, 0.008]} position={[cx, H / 2, cz - D / 2 + 0.004]} color="#3e271b" roughness={0.6} />
-      {/* Left compartment holds the NAS (placed by the scene); right compartment holds scores. */}
+      {/* Left compartment holds the math textbooks (placed by the scene); right compartment holds scores. */}
       <Compartment seed={29} floorY={floorY} cx={cx + W / 4 - T / 4} cz={cz + 0.02} width={compW} />
       {/* A couple of record sleeves leaning against the left side, in the gap by the desk. */}
       {[

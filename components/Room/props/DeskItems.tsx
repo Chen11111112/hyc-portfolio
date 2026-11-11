@@ -588,7 +588,7 @@ export function StationeryBasket() {
 /* Math scratch paper fanned out under the green notebook.            */
 /* ------------------------------------------------------------------ */
 
-function mathDraw(variant: number): Draw {
+export function mathDraw(variant: number): Draw {
   return (ctx, w, h) => {
     ctx.fillStyle = "#fbfbf7";
     ctx.fillRect(0, 0, w, h);

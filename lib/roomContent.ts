@@ -79,8 +79,13 @@ export const ROOM_LINKS = {
   bookshelf: "https://course.hychen.space",
   marimba: "https://www.youtube.com/@Hy.C",
   turntable: "https://www.instagram.com/hy.chen._.1029/",
-  notebook: "https://eminent-glider-8c3.notion.site/3cb9def5443d804882e3e4e125207995?pvs=74",
+  /** Math notes (Notion) — the math textbooks under the turntable. */
+  math: "https://eminent-glider-8c3.notion.site/3cb9def5443d804882e3e4e125207995?pvs=74",
   nas: "https://eminent-glider-8c3.notion.site/2b39def5443d80b9acfad70961d88589?pvs=74",
+  blog: "https://hyc.eshachem.com/blog/",
+  program: "https://hyc.eshachem.com/program",
   github: "https://github.com/Chen11111112",
   gitlab: "https://gitlab.com/HyCyu",
+  microphone:
+    "https://www.youtube.com/watch?v=kn9lX-UF2SU&list=PLWrUuokxPGQFB8prnd51C7K_q3XOVIY5L&pp=0gcJCR0Ga94AFGB0",
 } as const;

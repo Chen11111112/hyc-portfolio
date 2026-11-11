@@ -31,6 +31,11 @@ const DESK = { color: "#5a3a28", front: "#6e4a33" };
 const WALL = "#dfe5ea";
 const ROW_X0 = -0.21; // left bookend
 const GAP = 0.004;
+/** Entrance animation: wait, then drop each book from this height, one after another. */
+const INTRO_DELAY = 0.35;
+const INTRO_STAGGER = 0.09;
+const INTRO_DROP = 0.6;
+const INTRO_HEIGHT = 0.4;
 
 /** Per-book size variation so the row reads as real books. */
 const SIZES = [
@@ -99,19 +104,28 @@ function Book({
   useEffect(() => () => spine.dispose(), [spine]);
   const homeZ = -0.12 + size.d / 2;
 
-  useFrame((_, dt) => {
+  // Entrance: each book drops onto the desk in turn, with a small overshoot as it lands.
+  const lift = useRef(0); // the interactive (selected) lift, kept apart from the intro drop
+  const still = useMemo(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches, []);
+  useFrame(({ clock }, dt) => {
     const g = ref.current;
     if (!g) return;
     const k = Math.min(1, dt * 10);
     // Pulled toward you when selected; nudged on hover.
     const z = homeZ + (selected ? 0.11 : hovered ? 0.035 : 0);
     g.position.z += (z - g.position.z) * k;
-    g.position.y += ((selected ? 0.012 : 0) - g.position.y) * k;
+    lift.current += ((selected ? 0.012 : 0) - lift.current) * k;
     g.rotation.x += ((selected ? -0.06 : 0) - g.rotation.x) * k;
+    const t = still ? 1 : Math.min(1, Math.max(0, (clock.elapsedTime - INTRO_DELAY - index * INTRO_STAGGER) / INTRO_DROP));
+    // easeOutBack: lands slightly past rest, then settles.
+    const c = 1.4;
+    const eased = 1 + (c + 1) * (t - 1) ** 3 + c * (t - 1) ** 2;
+    g.position.y = lift.current + (1 - eased) * INTRO_HEIGHT;
+    g.visible = t > 0;
   });
 
   return (
-    <group ref={ref} position={[x, 0, homeZ]}>
+    <group ref={ref} position={[x, still ? 0 : INTRO_HEIGHT, homeZ]} visible={still}>
       <mesh
         position={[0, size.h / 2, 0]}
         onPointerOver={(e: ThreeEvent<PointerEvent>) => {
@@ -260,10 +274,11 @@ function WallWithWindow() {
 
 /** Late sun from outside the side-wall window, aimed so its patch falls across the desk. */
 /**
- * Low late-afternoon sun (~14°) running along the desk parallel to the back wall: it clears the tops of
- * the books (≤ 0.28 m) and lands on the LEGO flowers at the end of the row.
+ * Late-afternoon sun (~19°) through the corner window: it lays a warm strip along the desk in front of
+ * the books and reaches the LEGO plant at the end of the row. Angled slightly toward the wall so faces
+ * turned toward the viewer catch some of it too.
  */
-const SUN_TARGET = new Vector3(0.23, 0.11, 0.15);
+const SUN_TARGET = new Vector3(0.23, 0.015, 0.07);
 const WIN_CENTRE = new Vector3(SIDE_X, (WIN.y0 + WIN.y1) / 2, (WIN.z0 + WIN.z1) / 2);
 const SUN_POS = WIN_CENTRE.clone().addScaledVector(SUN_TARGET.clone().sub(WIN_CENTRE).normalize(), -3);
 
@@ -278,8 +293,8 @@ function Sun() {
       <directionalLight
         ref={light}
         position={SUN_POS.toArray()}
-        color="#ffdcaa"
-        intensity={5}
+        color="#ffd6a0"
+        intensity={7}
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
@@ -307,7 +322,9 @@ function CameraRig() {
   useLayoutEffect(() => {
     const camera = get().camera as PerspectiveCamera;
     const aspect = size.width / Math.max(size.height, 1);
-    const wide = aspect >= 1.1;
+    // The phone layout's pinned strip is wider than tall but has no panel beside it, so only treat
+    // clearly landscape viewports as "wide".
+    const wide = aspect >= 1.3;
     // Camera sits straight in front of the book row (so a pulled-out book moves straight toward you and
     // never slides over its neighbours). On wide screens the frame is lens-shifted, not rotated, so the
     // row lands ~33% across, clear of the panel; on phones it stays centred.
@@ -584,7 +601,8 @@ export default function BookStack({ stories, active, onSelect }: { stories: Stor
         <Book key={s.id} story={s} index={i} x={xs.centers[i]} selected={s.id === active} onSelect={onSelect} />
       ))}
       <Bookend x={xs.end + 0.002} flip />
-      <group position={[xs.end + 0.14, 0, 0.02]} rotation={[0, -0.4, 0]}>
+      {/* Forward of the wall, in the sunlit strip. */}
+      <group position={[xs.end + 0.14, 0, 0.16]} rotation={[0, -0.4, 0]}>
         <LegoPlant />
       </group>
       {/* Wall: certificates (click → 證照) and polaroids. Desk: turntable (lid down), pencils, pencil cup. */}

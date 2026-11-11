@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { ProjectExperienceRow } from "@/lib/about";
@@ -17,12 +18,32 @@ export type Story = {
   rows?: ProjectExperienceRow[];
   items?: StoryItem[];
   groups?: { label: string; items: StoryItem[] }[];
+  /** Photos shown at the top of the story, side by side. */
+  images?: { src: string; alt: string; width: number; height: number }[];
   /** Accordion sections; each `id` is also a URL hash (`/about#<id>`) that opens it. */
   folds?: { id: string; label: string; items: StoryItem[] }[];
 };
 
 /** The 3D book stack is client-only; the text tabs below it work without WebGL. */
 const BookStack = dynamic(() => import("./BookStack"), { ssr: false, loading: () => <div className={styles.stackLoading} /> });
+
+function Gallery({ images }: { images: NonNullable<Story["images"]> }) {
+  return (
+    <div className={styles.gallery}>
+      {images.map((img) => (
+        <Image
+          key={img.src}
+          src={img.src}
+          alt={img.alt}
+          width={img.width}
+          height={img.height}
+          sizes="(max-width: 760px) 45vw, 300px"
+          className={styles.photo}
+        />
+      ))}
+    </div>
+  );
+}
 
 function Items({ items }: { items: StoryItem[] }) {
   return (
@@ -37,12 +58,12 @@ function Items({ items }: { items: StoryItem[] }) {
   );
 }
 
-/** One fold open at a time; clicking the open one closes it. */
-function Folds({ folds, open, onToggle }: { folds: NonNullable<Story["folds"]>; open: string | null; onToggle: (id: string) => void }) {
+/** Accordion: any number of folds can be open at once; each one toggles independently. */
+function Folds({ folds, open, onToggle }: { folds: NonNullable<Story["folds"]>; open: Set<string>; onToggle: (id: string) => void }) {
   return (
     <div className={styles.folds}>
       {folds.map((f) => {
-        const expanded = open === f.id;
+        const expanded = open.has(f.id);
         return (
           <div key={f.id} className={styles.fold}>
             <h3 className={styles.foldHeading}>
@@ -110,7 +131,14 @@ function Projects({ rows }: { rows: ProjectExperienceRow[] }) {
  */
 export default function AboutBooks({ stories, intro }: { stories: Story[]; intro: string }) {
   const [active, setActive] = useState(stories[0]?.id ?? "");
-  const [openFold, setOpenFold] = useState<string | null>(null);
+  const [openFolds, setOpenFolds] = useState<Set<string>>(() => new Set());
+  const toggleFold = (id: string) =>
+    setOpenFolds((cur) => {
+      const next = new Set(cur);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   // `/about#competitions` (e.g. from the room's trophy shelf) opens that book;
   // `/about#interests-music` opens the book holding that fold, with the fold expanded.
   useEffect(() => {
@@ -120,7 +148,8 @@ export default function AboutBooks({ stories, intro }: { stories: Story[]; intro
       const owner = stories.find((s) => s.folds?.some((f) => f.id === id));
       if (owner) {
         setActive(owner.id);
-        setOpenFold(id);
+        // Open the linked fold without closing any others.
+        setOpenFolds((cur) => new Set(cur).add(id));
       }
     };
     fromHash();
@@ -175,9 +204,10 @@ export default function AboutBooks({ stories, intro }: { stories: Story[]; intro
             >
               <p className={styles.kicker}>{s.en}</p>
               <h2 className={styles.panelTitle}>{s.title}</h2>
+              {s.images && <Gallery images={s.images} />}
               {s.rows && <Projects rows={s.rows} />}
               {s.items && <Items items={s.items} />}
-              {s.folds && <Folds folds={s.folds} open={openFold} onToggle={(id) => setOpenFold((cur) => (cur === id ? null : id))} />}
+              {s.folds && <Folds folds={s.folds} open={openFolds} onToggle={toggleFold} />}
               {s.groups?.map((g) => (
                 <div key={g.label} className={styles.group}>
                   <h3 className={styles.groupLabel}>{g.label}</h3>

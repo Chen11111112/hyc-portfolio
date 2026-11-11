@@ -8,10 +8,11 @@ export const PROFILE_INTRO = {
 } as const;
 
 /** `internal` links stay in this site (same tab); the rest open in a new tab. */
-export type ProfileLink = { label: string; href: string; display: string; internal?: boolean };
+/** `featured` shows the link in its highlighted (selected) style by default. */
+export type ProfileLink = { label: string; href: string; display: string; internal?: boolean; featured?: boolean };
 
 export const PROFILE_LINKS: ProfileLink[] = [
   { label: "About", href: "/about", display: "專案・競賽・教學・志工・興趣・證照", internal: true },
-  { label: "Course", href: "https://course.hychen.space/", display: "course.hychen.space" },
+  { label: "Course", href: "https://course.hychen.space/", display: "course.hychen.space", featured: true },
   { label: "Program", href: "https://hyc.eshachem.com/program", display: "hyc.eshachem.com/program" },
 ];
