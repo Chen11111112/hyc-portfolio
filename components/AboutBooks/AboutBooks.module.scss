@@ -347,17 +347,26 @@
     top: 0;
     right: 0;
     left: 0;
-    display: block;
+    display: flex;
+    flex-direction: column;
     height: 66.6667%;
+    min-height: 0;
+    padding: 14px 14px 28px;
+    overflow: hidden;
+    pointer-events: auto;
+  }
+
+  .content {
+    flex: 1 1 auto;
     min-height: 0;
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
-    padding: 14px 14px 80px;
-    pointer-events: none;
-    -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 88px), transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 88px), transparent 100%);
+    touch-action: pan-y;
+    padding-bottom: 48px;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 48px), transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 48px), transparent 100%);
   }
 
   .scene {
