@@ -27,6 +27,7 @@
   color: #4a3424;
   font-size: 14px;
   text-decoration: none;
+  animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 
   &:hover {
     color: #b8650f;
@@ -39,13 +40,45 @@
   }
 }
 
-.board {
+.wall {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 0;
+  right: 0;
   bottom: 32%;
-  left: 16px;
-  overflow: visible;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
+  cursor: grab;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.board {
+  flex: 0 0 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 16px;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.cork {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
   border: 14px solid #a37a4f;
   border-radius: 4px;
   background-color: #c69c6d;
@@ -55,6 +88,7 @@
   background-position: 0 0, 2px 3px;
   background-size: 4px 4px, 7px 7px;
   box-shadow: inset 0 0 0 1px rgba(90, 55, 25, 0.25);
+  animation: boardIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .photo {
@@ -65,16 +99,35 @@
   background: #f7f3ea;
   box-shadow: 1px 2px 0 rgba(70, 45, 20, 0.12), 3px 8px 14px rgba(60, 36, 16, 0.22);
   transform: rotate(var(--rot));
+  animation: pinIn 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @for $i from 1 through 10 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{0.1 + ($i - 1) * 0.045}s;
+    }
+  }
 }
 
-.p1 { top: 6%; left: 4%; width: 20%; height: 32%; --rot: -4deg; }
-.p2 { top: 14%; left: 23%; width: 16%; height: 28%; --rot: 3deg; }
-.p3 { top: 4%; left: 39%; width: 22%; height: 22%; --rot: -2deg; }
-.p4 { top: 16%; left: 62%; width: 15%; height: 30%; --rot: 5deg; }
-.p5 { top: 6%; left: 78%; width: 17%; height: 28%; --rot: -5deg; }
-.p6 { top: 58%; left: 8%; width: 22%; height: 24%; --rot: 4deg; }
-.p7 { top: 52%; left: 36%; width: 20%; height: 34%; --rot: -3deg; }
-.p8 { top: 56%; left: 62%; width: 18%; height: 30%; --rot: 5deg; }
+.a1 { top: 2%; left: 2%; width: 13.4%; --rot: -3deg; }
+.a2 { top: 2%; left: 17.4%; width: 13.4%; --rot: 2deg; }
+.a3 { top: 2%; left: 32.8%; width: 20.6%; --rot: -1deg; }
+.a4 { top: 2%; left: 55.4%; width: 17.9%; --rot: 2deg; }
+.a5 { top: 2%; left: 75.3%; width: 13.4%; --rot: -4deg; }
+.a6 { top: 46%; left: 2%; width: 20.6%; --rot: 3deg; }
+.a7 { top: 46%; left: 24.6%; width: 17.9%; --rot: -2deg; }
+.a8 { top: 46%; left: 44.5%; width: 13.4%; --rot: 4deg; }
+.a9 { top: 44%; left: 59.9%; width: 12%; --rot: -3deg; }
+.a10 { top: 46%; left: 74.5%; width: 17.9%; --rot: 2deg; }
+
+.b1 { top: 2%; left: 2%; width: 12.8%; --rot: -4deg; }
+.b2 { top: 2%; left: 16.8%; width: 17.1%; --rot: 2deg; }
+.b3 { top: 2%; left: 35.9%; width: 17.1%; --rot: -2deg; }
+.b4 { top: 2%; left: 55%; width: 11.1%; --rot: 3deg; }
+.b5 { top: 2%; left: 68.1%; width: 11.1%; --rot: -3deg; }
+.b6 { top: 2%; left: 81.2%; width: 11.1%; --rot: 4deg; }
+.b7 { top: 52%; left: 2%; width: 12.2%; --rot: -2deg; }
+.b8 { top: 52%; left: 16.8%; width: 12.2%; --rot: 3deg; }
+.b9 { top: 52%; left: 31.6%; width: 17.1%; --rot: -1deg; }
 
 .pin {
   position: absolute;
@@ -88,17 +141,26 @@
   transform: translateX(-50%);
 }
 
-.swatch {
+.frame {
+  position: relative;
   display: block;
   width: 100%;
-  height: 100%;
+  overflow: hidden;
+}
+
+.shot {
+  object-fit: cover;
+  transform: scale(1.04);
 }
 
 .sticker {
   position: absolute;
   z-index: 3;
-  width: clamp(76px, 12vw, 108px);
+  width: clamp(68px, 9vw, 96px);
+  pointer-events: none;
+  transform: rotate(var(--rot, 0deg));
   filter: drop-shadow(2px 3px 0 rgba(70, 42, 18, 0.2));
+  animation: stickerIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.32s both;
 
   svg {
     display: block;
@@ -109,27 +171,27 @@
 }
 
 .dino {
-  top: 2%;
-  right: 16%;
-  transform: rotate(-8deg);
+  top: 30%;
+  right: 2%;
+  --rot: -8deg;
 }
 
 .hedgehog {
   top: 34%;
-  left: 30%;
-  transform: rotate(7deg);
+  left: 34%;
+  --rot: 7deg;
 }
 
 .kitten {
-  right: 6%;
-  bottom: 6%;
-  transform: rotate(8deg);
+  right: 3%;
+  bottom: 2%;
+  --rot: 8deg;
 }
 
 .puppy {
-  top: 38%;
+  top: 36%;
   left: 2%;
-  transform: rotate(-10deg);
+  --rot: -10deg;
 }
 
 .desk {
@@ -141,6 +203,7 @@
   display: flex;
   flex-direction: column;
   height: 32%;
+  animation: riseIn 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .surface {
@@ -164,11 +227,15 @@
 }
 
 @media (max-width: 760px) {
-  .board {
-    top: 10px;
-    right: 10px;
+  .wall {
     bottom: 34%;
-    left: 10px;
+  }
+
+  .board {
+    padding: 10px;
+  }
+
+  .cork {
     border-width: 10px;
   }
 
@@ -186,20 +253,78 @@
   }
 
   .sticker {
-    width: clamp(64px, 18vw, 88px);
+    width: clamp(56px, 16vw, 76px);
   }
 
-  .p1 { top: 3%; left: 2%; width: 48%; height: 26%; --rot: -3deg; }
-  .p2 { top: 8%; left: 46%; width: 48%; height: 22%; --rot: 4deg; }
-  .p3 { top: 30%; left: 4%; width: 44%; height: 20%; --rot: 2deg; }
-  .p4 { top: 26%; left: 46%; width: 48%; height: 24%; --rot: -4deg; }
-  .p5 { top: 48%; left: 2%; width: 46%; height: 22%; --rot: -2deg; }
-  .p6 { top: 50%; left: 46%; width: 48%; height: 22%; --rot: 5deg; }
-  .p7 { top: 68%; left: 6%; width: 44%; height: 22%; --rot: 3deg; }
-  .p8 { top: 70%; left: 48%; width: 46%; height: 22%; --rot: -3deg; }
+  .a1 { top: 2%; left: 2%; width: 25.2%; --rot: -3deg; }
+  .a2 { top: 2%; left: 29.2%; width: 25.2%; --rot: 2deg; }
+  .a3 { top: 2%; left: 56.4%; width: 38.8%; --rot: -1deg; }
+  .a4 { top: 26%; left: 2%; width: 33.6%; --rot: 2deg; }
+  .a5 { top: 26%; left: 37.6%; width: 25.2%; --rot: -4deg; }
+  .a6 { top: 50%; left: 2%; width: 38.8%; --rot: 3deg; }
+  .a7 { top: 50%; left: 42.8%; width: 33.6%; --rot: -2deg; }
+  .a8 { top: 68%; left: 2%; width: 25.2%; --rot: 4deg; }
+  .a9 { top: 68%; left: 29.2%; width: 23.8%; --rot: -3deg; }
+  .a10 { top: 68%; left: 54.9%; width: 33.6%; --rot: 2deg; }
+
+  .b1 { top: 2%; left: 2%; width: 25.1%; --rot: -4deg; }
+  .b2 { top: 2%; left: 29.1%; width: 33.5%; --rot: 2deg; }
+  .b3 { top: 2%; left: 64.5%; width: 32%; --rot: -2deg; }
+  .b4 { top: 26%; left: 2%; width: 21.7%; --rot: 3deg; }
+  .b5 { top: 26%; left: 25.7%; width: 21.7%; --rot: -3deg; }
+  .b6 { top: 26%; left: 49.5%; width: 21.7%; --rot: 4deg; }
+  .b7 { top: 54%; left: 2%; width: 25.1%; --rot: -2deg; }
+  .b8 { top: 54%; left: 29.1%; width: 25.1%; --rot: 3deg; }
+  .b9 { top: 54%; left: 56.2%; width: 33.5%; --rot: -1deg; }
 
   .dino { top: 0; right: 2%; }
-  .hedgehog { top: 38%; left: 30%; }
+  .hedgehog { top: 34%; left: 28%; }
   .kitten { right: 2%; bottom: 1%; }
-  .puppy { top: 56%; left: 0; }
+  .puppy { top: 54%; left: 0; }
+}
+
+@keyframes boardIn {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+}
+
+@keyframes pinIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) rotate(var(--rot)) scale(0.96);
+  }
+
+  to {
+    transform: translateY(0) rotate(var(--rot)) scale(1);
+  }
+}
+
+@keyframes stickerIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) rotate(var(--rot, 0deg)) scale(0.6);
+  }
+
+  to {
+    transform: translateY(0) rotate(var(--rot, 0deg)) scale(1);
+  }
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .back,
+  .cork,
+  .photo,
+  .sticker,
+  .desk {
+    animation: none;
+  }
 }
