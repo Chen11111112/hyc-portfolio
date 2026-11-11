@@ -103,10 +103,19 @@ function ScannedCertificate({ src }: { src: string }) {
 
 /** One framed certificate at its 田-grid cell on the back wall. */
 export function Certificate({ index }: { index: number }) {
+  return (
+    <group position={[CERT_FRAME.pos[index][0], CERT_FRAME.pos[index][1], 0]}>
+      <CertificateArt index={index} />
+    </group>
+  );
+}
+
+/** A framed certificate centred on the origin (back of the frame at z = 0), size CERT_FRAME.w × h. */
+export function CertificateArt({ index }: { index: number }) {
   const { w, h } = CERT_FRAME;
   const src = CERTIFICATES[index].src;
   return (
-    <group position={[CERT_FRAME.pos[index][0], CERT_FRAME.pos[index][1], 0]}>
+    <group>
       <Box size={[w, h, 0.018]} position={[0, 0, 0.009]} color="#2a2420" roughness={0.45} />
       <Box size={[w - 0.012, h - 0.012, 0.004]} position={[0, 0, 0.0195]} color="#f4f2ec" roughness={0.9} cast={false} />
       {src ? (

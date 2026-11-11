@@ -71,26 +71,25 @@ function Projects({ rows }: { rows: ProjectExperienceRow[] }) {
 }
 
 /**
- * About page: a stack of six 3D books works as the sidebar — click a book (or its tab) to pull it out
- * and read that story. All six stories are in the HTML; only the selected one is shown.
+ * About page: the room's desk fills the page and the six story books standing on it are the navigation —
+ * click a book (or its tab) to pull it out and read that story in the panel on the right. All six stories are in the HTML; only the selected one is shown.
  */
 export default function AboutBooks({ stories, intro }: { stories: Story[]; intro: string }) {
   const [active, setActive] = useState(stories[0]?.id ?? "");
   return (
     <main className={styles.page}>
-      <header className={styles.header}>
-        <Link href="/" className={styles.back}>
-          ← 回到房間
-        </Link>
-        <h1 className={styles.title}>About</h1>
-        {intro && <p className={styles.intro}>{intro}</p>}
-      </header>
+      {/* The room's desk fills the page; the books on it are the navigation. */}
+      <div className={styles.scene}>
+        <BookStack stories={stories} active={active} onSelect={setActive} />
+      </div>
 
-      <div className={styles.layout}>
-        <aside className={styles.sidebar}>
-          <div className={styles.stack}>
-            <BookStack stories={stories} active={active} onSelect={setActive} />
-          </div>
+      <div className={styles.overlay}>
+        <header className={styles.header}>
+          <Link href="/" className={styles.back}>
+            ← 回到房間
+          </Link>
+          <h1 className={styles.title}>About</h1>
+          {intro && <p className={styles.intro}>{intro}</p>}
           <nav className={styles.tabs} role="tablist" aria-label="About sections">
             {stories.map((s) => (
               <button
@@ -109,7 +108,8 @@ export default function AboutBooks({ stories, intro }: { stories: Story[]; intro
               </button>
             ))}
           </nav>
-        </aside>
+          <p className={styles.hint}>點擊桌上的書，翻開那段經歷</p>
+        </header>
 
         <div className={styles.content}>
           {stories.map((s) => (

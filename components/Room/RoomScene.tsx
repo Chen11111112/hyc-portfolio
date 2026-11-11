@@ -667,8 +667,8 @@ function Room({ resetRef, night }: { resetRef: MutableRefObject<(() => void) | n
       </Clickable>
       <DeskLamp />
       <MonitorRiser />
-      {/* 專案經歷: every device on the desk lights up together. */}
-      <Clickable slug="projects" label={[DESK_CX + 0.04, 1.45, 0.2]} zones={[{ position: [DESK_CX + 0.04, 1.13, 0.14], size: [0.7, 0.45, 0.14] }]}>
+      {/* 自我介紹 → /about: every device on the desk lights up together. */}
+      <Clickable href="/about" title="自我介紹" label={[DESK_CX + 0.04, 1.45, 0.2]} zones={[{ position: [DESK_CX + 0.04, 1.13, 0.14], size: [0.7, 0.45, 0.14] }]}>
         <Monitor />
         <MacMini />
         <Laptop />

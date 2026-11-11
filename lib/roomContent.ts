@@ -81,4 +81,6 @@ export const ROOM_LINKS = {
   turntable: "https://www.instagram.com/hy.chen._.1029/",
   notebook: "https://eminent-glider-8c3.notion.site/3cb9def5443d804882e3e4e125207995?pvs=74",
   nas: "https://eminent-glider-8c3.notion.site/2b39def5443d80b9acfad70961d88589?pvs=74",
+  github: "https://github.com/Chen11111112",
+  gitlab: "https://gitlab.com/HyCyu",
 } as const;

@@ -108,3 +108,19 @@ export default function PegboardPhotos() {
     </group>
   );
 }
+
+/** A polaroid (white frame + placeholder or real picture) centred on the origin, facing +z. */
+export function Polaroid({ index, src }: { index: number; src?: string }) {
+  return (
+    <group>
+      <Box size={[FRAME_W, FRAME_H, 0.002]} color="#fbfaf6" roughness={0.6} />
+      {src ? (
+        <SafeSuspense fallback={<PlaceholderPicture index={index} />}>
+          <LoadedPicture src={src} />
+        </SafeSuspense>
+      ) : (
+        <PlaceholderPicture index={index} />
+      )}
+    </group>
+  );
+}

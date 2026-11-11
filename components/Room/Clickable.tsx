@@ -30,7 +30,7 @@ function emissiveMaterials(root: Group) {
 type Target =
   /** Opens the experience page for this slug. */
   | { slug: ExperienceSlug; href?: never; onSelect?: never; title?: string }
-  /** Opens an external URL in a new tab. */
+  /** A site path ("/about") navigates in-app; anything else opens in a new tab. */
   | { href: string; title: string; slug?: never; onSelect?: never }
   /** Runs a custom action (e.g. toggling something in the scene). */
   | { onSelect: () => void; title: string; slug?: never; href?: never };
@@ -52,7 +52,7 @@ export default function Clickable({
   const router = useRouter();
   const lift = useRef<Group>(null);
   const [hovered, setHovered] = useState(false);
-  const route = target.slug ? experienceHref(target.slug) : null;
+  const route = target.slug ? experienceHref(target.slug) : target.href?.startsWith("/") ? target.href : null;
   const title = target.title ?? (target.slug ? (getExperience(target.slug)?.label ?? target.slug) : "");
 
   useEffect(() => {

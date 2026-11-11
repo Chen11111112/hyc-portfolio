@@ -14,7 +14,4 @@ export const PROFILE_LINKS: ProfileLink[] = [
   { label: "About", href: "/about", display: "專案・競賽・教學・志工・興趣・證照", internal: true },
   { label: "Course", href: "https://course.hychen.space/", display: "course.hychen.space" },
   { label: "Program", href: "https://hyc.eshachem.com/program", display: "hyc.eshachem.com/program" },
-  { label: "Instagram", href: "https://www.instagram.com/hy.chen._.1029/", display: "@hy.chen._.1029" },
-  { label: "YouTube", href: "https://www.youtube.com/@Hy.C", display: "@Hy.C" },
-  { label: "GitHub", href: "https://github.com/Chen11111112", display: "Chen11111112" },
 ];

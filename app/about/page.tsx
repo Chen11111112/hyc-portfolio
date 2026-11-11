@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import AboutBooks, { type Story } from "@/components/AboutBooks/AboutBooks";
-import { getAboutSections, getProjectExperience } from "@/lib/about";
+import { getAboutSections, getProjectExperience, type ProjectExperienceRow } from "@/lib/about";
 
 export const metadata: Metadata = {
   title: "About",
@@ -14,12 +14,24 @@ function item(line: string) {
   return { text: text.trim(), year: year?.trim() };
 }
 
+/**
+ * The project table names each organisation only on its first row (like a merged cell); carry it down
+ * so every project is grouped under the right one.
+ */
+function withOrgFilled(rows: ProjectExperienceRow[]) {
+  let org = "";
+  return rows.map((r) => {
+    if (r.org.trim()) org = r.org.trim();
+    return { ...r, org };
+  });
+}
+
 export default function AboutPage() {
   const sections = getAboutSections();
   const lines = (heading: string) => sections.find((s) => s.heading === heading)?.lines ?? [];
 
   const stories: Story[] = [
-    { id: "projects", title: "專案經歷", en: "Projects", color: "#2f4858", rows: getProjectExperience() },
+    { id: "projects", title: "專案經歷", en: "Projects", color: "#2f4858", rows: withOrgFilled(getProjectExperience()) },
     { id: "competitions", title: "競賽經歷", en: "Competitions", color: "#a8452f", items: lines("競賽經歷").map(item) },
     {
       id: "teaching",

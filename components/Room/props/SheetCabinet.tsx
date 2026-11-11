@@ -14,7 +14,8 @@ const H = SHEET_CAB.h;
 const WOOD = { color: "#4a2f20", roughness: 0.55 };
 const FRONT = { color: "#5a3a28", roughness: 0.5 };
 
-function TurntableModel() {
+/** Turntable model, origin at the plinth base centre. `lidOpen` props the dust cover up toward the wall. */
+export function TurntableModel({ lidOpen = true }: { lidOpen?: boolean }) {
   const platter = useRef<Group>(null);
   // 33⅓ rpm.
   useFrame((_, dt) => {
@@ -49,10 +50,10 @@ function TurntableModel() {
       {/* Speed knob + start button. */}
       <Cyl r={0.012} h={0.01} position={[-0.18, top + 0.005, 0.14]} color="#c2c6ca" metalness={0.85} roughness={0.25} />
       <Box size={[0.025, 0.006, 0.015]} position={[-0.14, top + 0.003, 0.15]} color="#c2c6ca" metalness={0.85} roughness={0.25} />
-      {/* Dust cover, propped open toward the wall. */}
-      <group position={[0, top + 0.002, -0.175]} rotation={[-1.25, 0, 0]}>
-        <mesh position={[0, 0.002, 0.175]}>
-          <boxGeometry args={[0.45, 0.004, 0.35]} />
+      {/* Dust cover: propped open toward the wall, or closed over the platter. */}
+      <group position={[0, top + 0.002, -0.175]} rotation={[lidOpen ? -1.25 : 0, 0, 0]}>
+        <mesh position={[0, lidOpen ? 0.002 : 0.05, 0.175]}>
+          <boxGeometry args={lidOpen ? [0.45, 0.004, 0.35] : [0.45, 0.1, 0.35]} />
           <meshPhysicalMaterial color="#ffffff" roughness={0.05} transparent opacity={0.14} side={DoubleSide} depthWrite={false} />
         </mesh>
       </group>
