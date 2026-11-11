@@ -314,7 +314,8 @@ function Sun() {
 
 /**
  * Frames the desk head-on. Wide screens lens-shift the books to ~33% across so the panel can sit on the
- * right. Phones use the page width, not the short bottom strip: the whole scene slides right.
+ * right. On phones the books are centred in the bottom strip: close enough that the side window is out
+ * of frame (the sun still comes from it) and the left of the turntable may be cropped.
  */
 function CameraRig() {
   const get = useThree((s) => s.get);
@@ -326,12 +327,19 @@ function CameraRig() {
     const wide = !phone && aspect >= 1.3;
     // Straight in front of the row, so a pulled-out book moves toward you and not over its neighbours.
     const booksX = -0.06;
-    camera.position.set(booksX, wide ? 0.72 : 0.64, wide ? 2.0 : 1.6);
-    camera.lookAt(booksX, 0.3, 0);
     const tanHalf = Math.tan(((camera.fov / 2) * Math.PI) / 180);
-    // Positive shift moves the scene left. Phones move it right by a fifth of the strip.
-    const shift = wide ? 0.5 - 0.33 : phone ? -0.2 : 0;
-    camera.filmOffset = shift * 2 * tanHalf * aspect * camera.getFilmWidth();
+    if (phone) {
+      const halfWidth = 0.5;
+      const distance = halfWidth / (tanHalf * Math.max(aspect, 0.75));
+      camera.position.set(booksX, 0.42, distance);
+      camera.lookAt(booksX, 0.16, 0);
+      camera.filmOffset = 0;
+    } else {
+      camera.position.set(booksX, wide ? 0.72 : 0.64, wide ? 2.0 : 1.6);
+      camera.lookAt(booksX, 0.3, 0);
+      const shift = wide ? 0.5 - 0.33 : 0;
+      camera.filmOffset = shift * 2 * tanHalf * aspect * camera.getFilmWidth();
+    }
     camera.updateProjectionMatrix();
   }, [get, size]);
   return null;
