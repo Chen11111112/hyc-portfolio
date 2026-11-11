@@ -75,6 +75,55 @@ function Pole() {
   );
 }
 
+// Hard-shell ski boots: white lower shell, black cuff, four buckles on the outside and a power strap.
+const SHELL = { color: "#eceef1", roughness: 0.3, metalness: 0.05 };
+const CUFF = { color: "#1f2126", roughness: 0.35, metalness: 0.05 };
+const BUCKLE = { color: "#b9bec5", roughness: 0.25, metalness: 0.85 };
+const SOLE = { color: "#141416", roughness: 0.8 };
+
+/** One ski boot, sole at y = 0, toe toward +z. `side` is +1 for the right boot (buckles face +x), -1 for the left. */
+function SkiBoot({ side }: { side: 1 | -1 }) {
+  const out = side * 0.056; // outer face of the shell
+  return (
+    <group>
+      {/* Sole with raised toe and heel welts (the bits bindings clamp onto). */}
+      <Box size={[0.1, 0.028, 0.31]} position={[0, 0.014, 0]} {...SOLE} />
+      <Box size={[0.084, 0.014, 0.03]} position={[0, 0.035, 0.15]} {...SOLE} />
+      <Box size={[0.084, 0.014, 0.03]} position={[0, 0.035, -0.15]} {...SOLE} />
+      {/* Lower shell + rounded toe. */}
+      <Box size={[0.106, 0.11, 0.25]} position={[0, 0.083, -0.015]} {...SHELL} />
+      <Cyl r={0.05} h={0.104} position={[0, 0.075, 0.105]} rotation={[0, 0, Math.PI / 2]} seg={18} {...SHELL} />
+      {/* Instep overlap flap, a touch proud of the shell. */}
+      <Box size={[0.096, 0.03, 0.12]} position={[0, 0.142, 0.03]} rotation={[-0.35, 0, 0]} {...SHELL} />
+      {/* Cuff leaning forward, tongue in front of it, liner showing at the top. */}
+      <group position={[0, 0.135, -0.06]} rotation={[0.22, 0, 0]}>
+        <Box size={[0.112, 0.21, 0.12]} position={[0, 0.105, -0.005]} {...CUFF} />
+        <Box size={[0.08, 0.2, 0.03]} position={[0, 0.1, 0.065]} color={ACCENT} roughness={0.4} />
+        <Box size={[0.096, 0.02, 0.1]} position={[0, 0.215, 0]} color="#3a3d44" roughness={0.9} />
+        {/* Power strap round the top of the cuff. */}
+        <Box size={[0.116, 0.032, 0.164]} position={[0, 0.185, 0.008]} color={GRAPHIC} roughness={0.7} />
+        {/* Two cuff buckles. */}
+        {[0.06, 0.135].map((y) => (
+          <group key={y}>
+            <Box size={[0.008, 0.016, 0.05]} position={[side * 0.058, y, 0.02]} {...BUCKLE} />
+            <Box size={[0.006, 0.01, 0.03]} position={[side * 0.063, y, 0.03]} color={ACCENT} roughness={0.4} />
+          </group>
+        ))}
+      </group>
+      {/* Two shell buckles over the instep. */}
+      {[
+        [0.12, 0.06],
+        [0.1, 0.12],
+      ].map(([y, z]) => (
+        <group key={z}>
+          <Box size={[0.008, 0.016, 0.05]} position={[out + side * 0.002, y, z]} rotation={[-0.35, 0, 0]} {...BUCKLE} />
+          <Box size={[0.006, 0.01, 0.03]} position={[out + side * 0.007, y, z + 0.01]} rotation={[-0.35, 0, 0]} color={ACCENT} roughness={0.4} />
+        </group>
+      ))}
+    </group>
+  );
+}
+
 export default function Skis() {
   const skis: { base: Vec3; tilt: number }[] = [
     // Left tail → top leans right; the right one sits a touch further out so they cross cleanly.
@@ -95,6 +144,15 @@ export default function Skis() {
           <Pole />
         </group>
       ))}
+      {/* Ski boots on the floor to the right of the skis, turned a little toward the room. */}
+      <group position={[SKIS_CX + 0.4, 0, BASE_Z + 0.12]} rotation={[0, 0.35, 0]}>
+        <group position={[-0.065, 0, 0]} rotation={[0, 0.06, 0]}>
+          <SkiBoot side={-1} />
+        </group>
+        <group position={[0.07, 0, -0.02]} rotation={[0, -0.04, 0]}>
+          <SkiBoot side={1} />
+        </group>
+      </group>
     </group>
   );
 }

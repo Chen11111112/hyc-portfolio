@@ -71,6 +71,7 @@ import PegboardPhotos from "./props/PegboardPhotos";
 import Plants from "./props/Plants";
 import Posters from "./props/Posters";
 import { CERTIFICATES, MUSIC_HREF, ROOM_LINKS } from "@/lib/roomContent";
+import RoomGuide from "./RoomGuide";
 import Clickable from "./Clickable";
 import { NightProvider, lerp, readStoredNight, storeNight, useNightMix } from "./nightMode";
 import styles from "./Room.module.scss";
@@ -827,6 +828,7 @@ export default function RoomScene() {
         <button type="button" className={styles.reset} onClick={() => resetRef.current?.()}>
           重設視角
         </button>
+        <RoomGuide />
       </div>
       <Canvas
         className={styles.canvas}

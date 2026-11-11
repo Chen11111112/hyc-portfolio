@@ -52,8 +52,8 @@
 
 .viewControls {
   position: absolute;
-  right: 16px;
-  bottom: 16px;
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   z-index: 5;
   display: flex;
   align-items: center;
@@ -101,5 +101,103 @@
     top: calc(12px + env(safe-area-inset-top, 0px));
     right: 12px;
     bottom: auto;
+  }
+}
+
+/* Touch devices: the mouse hint doesn't apply, and dropping it keeps the buttons compact. */
+@media (hover: none), (pointer: coarse) {
+  .hint {
+    display: none;
+  }
+}
+
+/* Room guide: button sits with the view controls; the panel pops up above it. */
+.guide {
+  position: relative;
+  pointer-events: auto;
+}
+
+.guidePanel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  width: min(320px, calc(100vw - 32px));
+  max-height: min(70vh, 560px);
+  max-height: min(70dvh, 560px);
+  overflow-y: auto;
+  padding: 14px 12px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  background: rgba(16, 17, 20, 0.88);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+  color: #e8e8e6;
+  font: 400 13px/1.5 var(--font-sans), system-ui, sans-serif;
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  overscroll-behavior: contain;
+}
+
+.guideIntro {
+  margin: 0 4px 10px;
+  color: #9aa1a9;
+  font-size: 12px;
+}
+
+.guideHeading {
+  margin: 10px 4px 4px;
+  color: #ffb04a;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.guideList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guideRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  color: inherit;
+  text-decoration: none;
+
+  &:is(a):hover {
+    background: rgba(255, 255, 255, 0.07);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #ffb04a;
+    outline-offset: -2px;
+  }
+}
+
+.guideObject {
+  color: #9aa1a9;
+}
+
+.guideTitle {
+  color: #fff;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Phones: the controls sit at the top right, so the panel drops down instead. */
+@media (max-width: 600px) {
+  .guidePanel {
+    top: calc(100% + 10px);
+    bottom: auto;
+    max-height: 60dvh;
+  }
+
+  /* Above the terminal card (z 6), which sits at the bottom on phones, so the open panel isn't covered. */
+  .viewControls {
+    z-index: 7;
   }
 }
