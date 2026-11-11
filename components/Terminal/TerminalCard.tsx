@@ -39,22 +39,21 @@ export default function TerminalCard() {
   return (
     <section className={styles.card} data-open={open} aria-label="About Hy.C">
       <header className={styles.bar}>
-        <span className={styles.dots} aria-hidden>
-          <i />
-          <i />
-          <i />
+        <span className={styles.dots}>
+          {[0, 1, 2].map((i) => (
+            <button
+              key={i}
+              type="button"
+              className={styles.dot}
+              aria-expanded={open}
+              aria-controls="hyc-terminal-body"
+              aria-label={open ? "收合終端機" : "展開終端機"}
+              onClick={() => setOpen((v) => !v)}
+            />
+          ))}
         </span>
         <span className={styles.title}>hyc@room: ~</span>
-        <button
-          type="button"
-          className={styles.toggle}
-          aria-expanded={open}
-          aria-controls="hyc-terminal-body"
-          onClick={() => setOpen((v) => !v)}
-        >
-          {open ? "–" : "+"}
-          <span className={styles.srOnly}>{open ? "Minimize terminal" : "Expand terminal"}</span>
-        </button>
+        <span className={styles.dotsSpacer} aria-hidden />
       </header>
       <div id="hyc-terminal-body" className={styles.body} hidden={!open}>
         <Prompt cmd="whoami" at={0.35} />

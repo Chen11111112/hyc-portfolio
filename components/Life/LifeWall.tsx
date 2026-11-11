@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, type PointerEvent, type ReactNode } from "react";
+import { useRef, type CSSProperties, type PointerEvent, type ReactNode } from "react";
 import styles from "./LifeWall.module.scss";
 
 const PINS = ["#d64545", "#3d6ea8", "#d4a017", "#2f8f5b"];
@@ -35,12 +35,14 @@ const BOARD_TWO: Shot[] = [
 ];
 
 const CLAYS: { color: string; left: string; bottom: string; width: string; height: string; radius: string }[] = [
-  { color: "#d97862", left: "8%", bottom: "18%", width: "clamp(52px, 6vw, 84px)", height: "clamp(44px, 7vh, 72px)", radius: "46% 42% 36% 40% / 48% 44% 34% 40%" },
-  { color: "#e7c27a", left: "26%", bottom: "42%", width: "clamp(40px, 4.5vw, 64px)", height: "clamp(36px, 5vh, 52px)", radius: "14px" },
-  { color: "#8eaa86", left: "42%", bottom: "12%", width: "clamp(56px, 6.5vw, 96px)", height: "clamp(48px, 8vh, 80px)", radius: "38% 42% 28% 32% / 30% 36% 44% 40%" },
-  { color: "#d9b39a", left: "62%", bottom: "36%", width: "clamp(44px, 5vw, 70px)", height: "clamp(44px, 5vw, 70px)", radius: "50%" },
-  { color: "#7eafc6", left: "78%", bottom: "16%", width: "clamp(50px, 5.5vw, 78px)", height: "clamp(42px, 7vh, 68px)", radius: "10px 26px 12px 22px" },
+  { color: "#d97862", left: "46%", bottom: "22%", width: "clamp(40px, 4.5vw, 64px)", height: "clamp(36px, 6vh, 58px)", radius: "46% 42% 36% 40% / 48% 44% 34% 40%" },
+  { color: "#e7c27a", left: "54%", bottom: "40%", width: "clamp(34px, 3.6vw, 52px)", height: "clamp(30px, 4.5vh, 44px)", radius: "14px" },
+  { color: "#8eaa86", left: "60%", bottom: "16%", width: "clamp(44px, 5vw, 72px)", height: "clamp(40px, 7vh, 64px)", radius: "38% 42% 28% 32% / 30% 36% 44% 40%" },
+  { color: "#d9b39a", left: "70%", bottom: "34%", width: "clamp(36px, 4vw, 56px)", height: "clamp(36px, 4vw, 56px)", radius: "50%" },
+  { color: "#7eafc6", left: "76%", bottom: "18%", width: "clamp(40px, 4.4vw, 62px)", height: "clamp(34px, 6vh, 54px)", radius: "10px 26px 12px 22px" },
 ];
+
+const PENCILS = ["#f2c230", "#2d6cdf", "#1d1d1f", "#e2483d", "#3c9a5f", "#f2c230"];
 
 function Photo({ src, alt, place, pin, ratio }: Shot & { pin: string }) {
   return (
@@ -106,6 +108,51 @@ function Kitten() {
       <circle cx="46" cy="32" r="1.5" fill="#1d1d21" />
       <ellipse cx="41" cy="37" rx="1.8" ry="1.3" fill="#e07a8a" />
     </Sticker>
+  );
+}
+
+function Flower({ cx, cy, petal }: { cx: number; cy: number; petal: string }) {
+  return (
+    <g>
+      {[0, 72, 144, 216, 288].map((deg) => {
+        const a = (deg * Math.PI) / 180;
+        return <circle key={deg} cx={cx + Math.cos(a) * 7} cy={cy + Math.sin(a) * 7} r="6" fill={petal} />;
+      })}
+      <circle cx={cx} cy={cy} r="4.5" fill="#f7d154" />
+    </g>
+  );
+}
+
+function DeskObjects() {
+  return (
+    <>
+      <div className={styles.lego} role="img" aria-label="樂高花卉">
+        <svg viewBox="0 0 88 124" aria-hidden>
+          <rect x="21" y="28" width="6" height="54" rx="1" fill="#2f6e2a" />
+          <rect x="59" y="18" width="6" height="64" rx="1" fill="#2f6e2a" />
+          <rect x="43" y="42" width="6" height="40" rx="1" fill="#2f6e2a" />
+          <Flower cx={24} cy={28} petal="#f28cb1" />
+          <Flower cx={62} cy={18} petal="#f5f1e6" />
+          <Flower cx={46} cy={42} petal="#c45bd0" />
+          <rect x="18" y="86" width="52" height="10" rx="1" fill="#7d4630" />
+          <rect x="22" y="94" width="44" height="26" rx="2" fill="#6e3b24" />
+          {[30, 44, 58].map((x) => (
+            <circle key={x} cx={x} cy="84" r="4" fill="#3b2a1e" />
+          ))}
+        </svg>
+      </div>
+      <div className={styles.vinyl} role="img" aria-label="黑膠">
+        <span className={styles.plinth} />
+        <span className={styles.disc} />
+        <span className={styles.arm} />
+      </div>
+      <div className={styles.pencils} role="img" aria-label="鉛筆">
+        {PENCILS.map((color, i) => (
+          <span key={color + i} className={styles.stick} style={{ "--c": color, "--i": i } as CSSProperties} />
+        ))}
+        <span className={styles.cup} />
+      </div>
+    </>
   );
 }
 
@@ -193,6 +240,7 @@ export default function LifeWall() {
 
       <div className={styles.desk}>
         <div className={styles.surface}>
+          <DeskObjects />
           {CLAYS.map((clay) => (
             <span key={clay.color} className={styles.clay} style={clay} role="img" aria-label="黏土模型" />
           ))}

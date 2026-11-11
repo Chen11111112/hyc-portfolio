@@ -108,26 +108,26 @@
   }
 }
 
-.a1 { top: 2%; left: 2%; width: 13.4%; --rot: -3deg; }
-.a2 { top: 2%; left: 17.4%; width: 13.4%; --rot: 2deg; }
-.a3 { top: 2%; left: 32.8%; width: 20.6%; --rot: -1deg; }
-.a4 { top: 2%; left: 55.4%; width: 17.9%; --rot: 2deg; }
-.a5 { top: 2%; left: 75.3%; width: 13.4%; --rot: -4deg; }
-.a6 { top: 46%; left: 2%; width: 20.6%; --rot: 3deg; }
-.a7 { top: 46%; left: 24.6%; width: 17.9%; --rot: -2deg; }
-.a8 { top: 46%; left: 44.5%; width: 13.4%; --rot: 4deg; }
-.a9 { top: 44%; left: 59.9%; width: 12%; --rot: -3deg; }
-.a10 { top: 46%; left: 74.5%; width: 17.9%; --rot: 2deg; }
+.a1 { top: 3%; left: 6%; width: 13.4%; --rot: -3deg; }
+.a2 { top: 4%; left: 21.7%; width: 13.4%; --rot: 2deg; }
+.a3 { top: 3%; left: 37.4%; width: 20.6%; --rot: -1deg; }
+.a4 { top: 5%; left: 60.3%; width: 17.9%; --rot: 2deg; }
+.a5 { top: 3%; left: 80.5%; width: 13.4%; --rot: -4deg; }
+.a6 { top: 50%; left: 6%; width: 20.6%; --rot: 3deg; }
+.a7 { top: 52%; left: 28.2%; width: 17.9%; --rot: -2deg; }
+.a8 { top: 48%; left: 47.6%; width: 13.4%; --rot: 4deg; }
+.a9 { top: 46%; left: 62.6%; width: 12%; --rot: -3deg; }
+.a10 { top: 52%; left: 76.1%; width: 17.9%; --rot: 2deg; }
 
-.b1 { top: 2%; left: 2%; width: 12.8%; --rot: -4deg; }
-.b2 { top: 2%; left: 16.8%; width: 17.1%; --rot: 2deg; }
-.b3 { top: 2%; left: 35.9%; width: 17.1%; --rot: -2deg; }
-.b4 { top: 2%; left: 55%; width: 11.1%; --rot: 3deg; }
-.b5 { top: 2%; left: 68.1%; width: 11.1%; --rot: -3deg; }
-.b6 { top: 2%; left: 81.2%; width: 11.1%; --rot: 4deg; }
-.b7 { top: 52%; left: 2%; width: 12.2%; --rot: -2deg; }
-.b8 { top: 52%; left: 16.8%; width: 12.2%; --rot: 3deg; }
-.b9 { top: 52%; left: 31.6%; width: 17.1%; --rot: -1deg; }
+.b1 { top: 4%; left: 6%; width: 12.8%; --rot: -4deg; }
+.b2 { top: 6%; left: 20.3%; width: 17.1%; --rot: 2deg; }
+.b3 { top: 4%; left: 39%; width: 17.1%; --rot: -2deg; }
+.b4 { top: 3%; left: 57.6%; width: 11.1%; --rot: 3deg; }
+.b5 { top: 5%; left: 70.3%; width: 11.1%; --rot: -3deg; }
+.b6 { top: 3%; left: 82.9%; width: 11.1%; --rot: 4deg; }
+.b7 { top: 54%; left: 8%; width: 12.2%; --rot: -2deg; }
+.b8 { top: 52%; left: 41.5%; width: 12.2%; --rot: 3deg; }
+.b9 { top: 56%; left: 74.9%; width: 17.1%; --rot: -1deg; }
 
 .pin {
   position: absolute;
@@ -226,6 +226,122 @@
   box-shadow: 0 7px 0 rgba(70, 48, 24, 0.14);
 }
 
+.vinyl,
+.pencils,
+.lego {
+  position: absolute;
+  z-index: 1;
+  filter: drop-shadow(0 7px 0 rgba(70, 48, 24, 0.12));
+}
+
+.vinyl {
+  left: 22%;
+  bottom: 14%;
+  width: clamp(96px, 12vw, 150px);
+  height: clamp(68px, 9vw, 104px);
+}
+
+.plinth {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 46%;
+  border-radius: 4px;
+  background: #2a1a12;
+}
+
+.disc {
+  position: absolute;
+  bottom: 18%;
+  left: 16%;
+  width: 62%;
+  border-radius: 50%;
+  aspect-ratio: 1.35;
+  background:
+    radial-gradient(circle, #e8e6e1 0 6%, #d4483b 7% 18%, #1c1c1e 19% 24%, #111 25% 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+    inset 0 0 0 7px rgba(255, 255, 255, 0.04);
+}
+
+.arm {
+  position: absolute;
+  top: 18%;
+  right: 8%;
+  width: 42%;
+  height: 3px;
+  border-radius: 2px;
+  background: #d9dcdf;
+  transform: rotate(28deg);
+  transform-origin: right center;
+
+  &::before {
+    position: absolute;
+    top: -5px;
+    right: -4px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #b9bcc0;
+    content: "";
+  }
+}
+
+.pencils {
+  right: 5%;
+  bottom: 12%;
+  width: clamp(52px, 6vw, 72px);
+  height: clamp(84px, 12vh, 118px);
+}
+
+.stick {
+  position: absolute;
+  bottom: 30%;
+  left: calc(14% + var(--i) * 11%);
+  width: 5px;
+  height: calc(48% + var(--i) * 5%);
+  border-radius: 1px;
+  background: var(--c);
+  transform: rotate(calc((var(--i) - 2.5) * 8deg));
+  transform-origin: bottom center;
+
+  &::before {
+    position: absolute;
+    top: -7px;
+    left: 0;
+    border-right: 2.5px solid transparent;
+    border-bottom: 7px solid #f3e2b8;
+    border-left: 2.5px solid transparent;
+    content: "";
+  }
+}
+
+.cup {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  height: 40%;
+  border-radius: 3px 3px 10px 10px;
+  background: linear-gradient(#f7f4ee, #e4dfd4);
+  box-shadow: inset 0 8px 0 rgba(90, 70, 40, 0.08);
+}
+
+.lego {
+  left: 4%;
+  bottom: 10%;
+  width: clamp(72px, 8vw, 104px);
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+}
+
 @media (max-width: 760px) {
   .wall {
     bottom: 34%;
@@ -256,26 +372,26 @@
     width: clamp(56px, 16vw, 76px);
   }
 
-  .a1 { top: 2%; left: 2%; width: 25.2%; --rot: -3deg; }
-  .a2 { top: 2%; left: 29.2%; width: 25.2%; --rot: 2deg; }
-  .a3 { top: 2%; left: 56.4%; width: 38.8%; --rot: -1deg; }
-  .a4 { top: 26%; left: 2%; width: 33.6%; --rot: 2deg; }
-  .a5 { top: 26%; left: 37.6%; width: 25.2%; --rot: -4deg; }
-  .a6 { top: 50%; left: 2%; width: 38.8%; --rot: 3deg; }
-  .a7 { top: 50%; left: 42.8%; width: 33.6%; --rot: -2deg; }
-  .a8 { top: 68%; left: 2%; width: 25.2%; --rot: 4deg; }
-  .a9 { top: 68%; left: 29.2%; width: 23.8%; --rot: -3deg; }
-  .a10 { top: 68%; left: 54.9%; width: 33.6%; --rot: 2deg; }
+  .a1 { top: 2%; left: 6%; width: 23.2%; --rot: -3deg; }
+  .a2 { top: 3%; left: 32.2%; width: 23.2%; --rot: 2deg; }
+  .a3 { top: 2%; left: 58.3%; width: 35.7%; --rot: -1deg; }
+  .a4 { top: 28%; left: 8%; width: 33.6%; --rot: 2deg; }
+  .a5 { top: 28%; left: 66.8%; width: 23.2%; --rot: -4deg; }
+  .a6 { top: 50%; left: 6%; width: 38.8%; --rot: 3deg; }
+  .a7 { top: 50%; left: 60.4%; width: 33.6%; --rot: -2deg; }
+  .a8 { top: 68%; left: 5%; width: 25.2%; --rot: 4deg; }
+  .a9 { top: 68%; left: 33.9%; width: 22%; --rot: -3deg; }
+  .a10 { top: 70%; left: 61.4%; width: 33.6%; --rot: 2deg; }
 
-  .b1 { top: 2%; left: 2%; width: 25.1%; --rot: -4deg; }
-  .b2 { top: 2%; left: 29.1%; width: 33.5%; --rot: 2deg; }
-  .b3 { top: 2%; left: 64.5%; width: 32%; --rot: -2deg; }
-  .b4 { top: 26%; left: 2%; width: 21.7%; --rot: 3deg; }
-  .b5 { top: 26%; left: 25.7%; width: 21.7%; --rot: -3deg; }
-  .b6 { top: 26%; left: 49.5%; width: 21.7%; --rot: 4deg; }
-  .b7 { top: 54%; left: 2%; width: 25.1%; --rot: -2deg; }
-  .b8 { top: 54%; left: 29.1%; width: 25.1%; --rot: 3deg; }
-  .b9 { top: 54%; left: 56.2%; width: 33.5%; --rot: -1deg; }
+  .b1 { top: 2%; left: 6%; width: 22.6%; --rot: -4deg; }
+  .b2 { top: 4%; left: 31.8%; width: 30.2%; --rot: 2deg; }
+  .b3 { top: 3%; left: 65.2%; width: 28.8%; --rot: -2deg; }
+  .b4 { top: 30%; left: 8%; width: 21.7%; --rot: 3deg; }
+  .b5 { top: 32%; left: 39.2%; width: 21.7%; --rot: -3deg; }
+  .b6 { top: 30%; left: 70.3%; width: 21.7%; --rot: 4deg; }
+  .b7 { top: 62%; left: 5%; width: 25.1%; --rot: -2deg; }
+  .b8 { top: 62%; left: 33.3%; width: 25.1%; --rot: 3deg; }
+  .b9 { top: 64%; left: 61.5%; width: 33.5%; --rot: -1deg; }
 
   .dino { top: 0; right: 2%; }
   .hedgehog { top: 34%; left: 28%; }
