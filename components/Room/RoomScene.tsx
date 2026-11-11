@@ -637,7 +637,7 @@ function Room({ resetRef, night }: { resetRef: MutableRefObject<(() => void) | n
           <HandwrittenScores />
         </Clickable>
         {/* 教學經歷 (workshop photos), same story as the pegboard. */}
-        <Clickable slug="teaching" label={[-3.15, 2.42, 0.08]}>
+        <Clickable href="/about#teaching" title="教學經歷" label={[-3.15, 2.42, 0.08]}>
           <PhotoString />
         </Clickable>
         {/* 作曲: marimba and the upright MIDI keyboard light up together. */}
@@ -693,21 +693,24 @@ function Room({ resetRef, night }: { resetRef: MutableRefObject<(() => void) | n
       <Clickable href={ROOM_LINKS.whiteboard} title="Next.js 開發" label={[WHITEBOARD.x, WHITEBOARD.y + 0.25, 0.08]} zones={[{ position: [WHITEBOARD.x, WHITEBOARD.y, 0.04], size: [WHITEBOARD.w + 0.06, WHITEBOARD.h + 0.06, 0.08] }]}>
         <Whiteboard />
       </Clickable>
-      {/* 教學活動記錄: the whole pegboard (board + photos). */}
+      {/* 教學活動記錄: the whole pegboard (board + photos) → the 教學經歷 book on /about. */}
       <Clickable
-        slug="teaching"
+        href="/about#teaching"
+        title="教學經歷"
         label={[PEG_X0 + PEG_W / 2, PEG_Y0 + PEG_H + 0.05, 0.08]}
         zones={[{ position: [PEG_X0 + PEG_W / 2, PEG_Y0 + PEG_H / 2, 0.05], size: [PEG_W + 0.03, PEG_H + 0.04, 0.1] }]}
       >
         <Pegboard />
         <PegboardPhotos />
       </Clickable>
-      <Clickable slug="piano" label={[PIANO_POS[0], SHEET_CAB.h + 0.5, 0.3]}>
+      {/* LEGO piano → 興趣經歷 › 其他 (單車環島、打工換宿…) on /about. */}
+      <Clickable href="/about#interests-other" title="興趣・其他" label={[PIANO_POS[0], SHEET_CAB.h + 0.5, 0.3]}>
         <LegoPiano />
       </Clickable>
-      {/* 專案經歷: touching any poster lights them all. */}
+      {/* 專案經歷: touching any poster lights them all → the 專案經歷 book on /about. */}
       <Clickable
-        slug="projects"
+        href="/about#projects"
+        title="專案經歷"
         label={[1.88, 2.36, 0.08]}
         zones={[
           { position: [2.11, 2.045, 0.025], size: [2.76, 0.46, 0.05] },
@@ -716,9 +719,10 @@ function Room({ resetRef, night }: { resetRef: MutableRefObject<(() => void) | n
       >
         <Posters />
       </Clickable>
-      {/* 證照: the 田 grid of certificates. */}
+      {/* 證照: the 田 grid of certificates → the 證照 book on /about. */}
       <Clickable
-        slug="certifications"
+        href="/about#certifications"
+        title="證照"
         label={[CERT_GRID.cx, CERT_GRID.cy + CERT_GRID.h / 2 + 0.06, 0.06]}
         zones={[{ position: [CERT_GRID.cx, CERT_GRID.cy, 0.03], size: [CERT_GRID.w + 0.05, CERT_GRID.h + 0.05, 0.06] }]}
       >
@@ -726,21 +730,22 @@ function Room({ resetRef, night }: { resetRef: MutableRefObject<(() => void) | n
           <Certificate key={c.name} index={i} />
         ))}
       </Clickable>
-      {/* 競賽經歷: trophy shelf above the bookshelf. */}
+      {/* 競賽經歷: trophy shelf above the bookshelf → the 競賽經歷 book on /about. */}
       <Clickable
-        slug="competitions"
+        href="/about#competitions"
+        title="競賽經歷"
         label={[TROPHY_SHELF.x0 + TROPHY_SHELF.w / 2, 1.93, 0.15]}
         zones={[{ position: [TROPHY_SHELF.x0 + TROPHY_SHELF.w / 2, 1.69, 0.1], size: [TROPHY_SHELF.w + 0.04, 0.38, 0.2] }]}
       >
         <TrophyShelf />
       </Clickable>
-      {/* 志工經歷 */}
-      <Clickable slug="volunteer" label={[CORK.x, CORK.y + 0.29, 0.06]} zones={[{ position: [CORK.x, CORK.y, 0.04], size: [0.44, 0.5, 0.08] }]}>
+      {/* 志工經歷 → the 志工經歷 book on /about. */}
+      <Clickable href="/about#volunteer" title="志工經歷" label={[CORK.x, CORK.y + 0.29, 0.06]} zones={[{ position: [CORK.x, CORK.y, 0.04], size: [0.44, 0.5, 0.08] }]}>
         <CorkBoard />
       </Clickable>
       <DysonFan />
-      {/* 滑雪經歷: skis and the trail map pinned behind them light up together. */}
-      <Clickable slug="snowboard" label={[SKIS_CX, 1.82, 0.12]} zones={[{ position: [SKIS_CX, 0.85, 0.16], size: [0.56, 1.72, 0.32] }]}>
+      {/* 滑雪經歷: skis and the trail map pinned behind them light up together → 興趣經歷 › 滑雪 on /about. */}
+      <Clickable href="/about#interests-ski" title="興趣・滑雪" label={[SKIS_CX, 1.82, 0.12]} zones={[{ position: [SKIS_CX, 0.85, 0.16], size: [0.56, 1.72, 0.32] }]}>
         <TrailMap />
         <Skis />
       </Clickable>
@@ -752,8 +757,8 @@ function Room({ resetRef, night }: { resetRef: MutableRefObject<(() => void) | n
       <Clickable href={ROOM_LINKS.nas} title="後端與資料庫開發" label={[SHEET_CAB.x0 + SHEET_CAB.w / 4, SHEET_CAB.h + 0.04, 0.45]}>
         <Nas />
       </Clickable>
-      {/* 音樂經歷: both guitars, including the gap between them. */}
-      <Clickable slug="music" label={[SHEET_CAB_CX, 2.08, 0.2]} zones={[{ position: [SHEET_CAB_CX, 1.43, 0.11], size: [0.92, 1.06, 0.2] }]}>
+      {/* 音樂經歷: both guitars, including the gap between them → 興趣經歷 › 音樂 on /about. */}
+      <Clickable href="/about#interests-music" title="興趣・音樂" label={[SHEET_CAB_CX, 2.08, 0.2]} zones={[{ position: [SHEET_CAB_CX, 1.43, 0.11], size: [0.92, 1.06, 0.2] }]}>
         <Guitars />
       </Clickable>
       <GamingChair position={[DESK_CX - 0.05, 0, 1.12]} yaw={-0.8} />

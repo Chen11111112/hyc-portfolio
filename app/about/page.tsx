@@ -29,6 +29,11 @@ function withOrgFilled(rows: ProjectExperienceRow[]) {
 export default function AboutPage() {
   const sections = getAboutSections();
   const lines = (heading: string) => sections.find((s) => s.heading === heading)?.lines ?? [];
+  const interests = lines("興趣經歷");
+  const allLines = sections.flatMap((s) => s.lines);
+  const isMusic = (l: string) => /音樂|馬林巴|爵士|樂社|獨奏/.test(l);
+  const isSki = (l: string) => /滑雪|雪板|ski/i.test(l);
+  const unique = (l: string, i: number, arr: string[]) => arr.indexOf(l) === i;
 
   const stories: Story[] = [
     { id: "projects", title: "專案經歷", en: "Projects", color: "#2f4858", rows: withOrgFilled(getProjectExperience()) },
@@ -41,7 +46,19 @@ export default function AboutPage() {
       items: [...lines("教學經歷"), ...lines("研習講師")].map(item),
     },
     { id: "volunteer", title: "志工經歷", en: "Volunteer", color: "#557a5d", items: lines("志工經歷").map(item) },
-    { id: "interests", title: "興趣經歷", en: "Interests", color: "#b0832f", items: lines("興趣經歷").map(item) },
+    {
+      id: "interests",
+      title: "興趣經歷",
+      en: "Interests",
+      color: "#b0832f",
+      // Accordion; `/about#interests-music` etc. opens one fold (the room's guitars / skis / LEGO piano link here).
+      folds: [
+        { id: "interests-music", label: "音樂", items: interests.filter(isMusic).map(item) },
+        // 興趣經歷 has no ski line yet; the CSIA instructor licence (證照) is the ski story so far.
+        { id: "interests-ski", label: "滑雪", items: [...interests, ...allLines].filter(isSki).filter(unique).map(item) },
+        { id: "interests-other", label: "其他", items: interests.filter((l) => !isMusic(l) && !isSki(l)).map(item) },
+      ],
+    },
     {
       id: "certifications",
       title: "證照",

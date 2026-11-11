@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ProjectExperienceRow } from "@/lib/about";
 import styles from "./AboutBooks.module.scss";
 
@@ -17,6 +17,8 @@ export type Story = {
   rows?: ProjectExperienceRow[];
   items?: StoryItem[];
   groups?: { label: string; items: StoryItem[] }[];
+  /** Accordion sections; each `id` is also a URL hash (`/about#<id>`) that opens it. */
+  folds?: { id: string; label: string; items: StoryItem[] }[];
 };
 
 /** The 3D book stack is client-only; the text tabs below it work without WebGL. */
@@ -32,6 +34,38 @@ function Items({ items }: { items: StoryItem[] }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+/** One fold open at a time; clicking the open one closes it. */
+function Folds({ folds, open, onToggle }: { folds: NonNullable<Story["folds"]>; open: string | null; onToggle: (id: string) => void }) {
+  return (
+    <div className={styles.folds}>
+      {folds.map((f) => {
+        const expanded = open === f.id;
+        return (
+          <div key={f.id} className={styles.fold}>
+            <h3 className={styles.foldHeading}>
+              <button
+                type="button"
+                id={`fold-${f.id}`}
+                className={styles.foldButton}
+                aria-expanded={expanded}
+                aria-controls={`fold-panel-${f.id}`}
+                onClick={() => onToggle(f.id)}
+              >
+                <span>{f.label}</span>
+                <span className={styles.foldCount}>{f.items.length}</span>
+                <span className={styles.foldChevron} aria-hidden />
+              </button>
+            </h3>
+            <div id={`fold-panel-${f.id}`} role="region" aria-labelledby={`fold-${f.id}`} hidden={!expanded} className={styles.foldPanel}>
+              <Items items={f.items} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -76,6 +110,23 @@ function Projects({ rows }: { rows: ProjectExperienceRow[] }) {
  */
 export default function AboutBooks({ stories, intro }: { stories: Story[]; intro: string }) {
   const [active, setActive] = useState(stories[0]?.id ?? "");
+  const [openFold, setOpenFold] = useState<string | null>(null);
+  // `/about#competitions` (e.g. from the room's trophy shelf) opens that book;
+  // `/about#interests-music` opens the book holding that fold, with the fold expanded.
+  useEffect(() => {
+    const fromHash = () => {
+      const id = decodeURIComponent(window.location.hash.slice(1));
+      if (stories.some((s) => s.id === id)) return setActive(id);
+      const owner = stories.find((s) => s.folds?.some((f) => f.id === id));
+      if (owner) {
+        setActive(owner.id);
+        setOpenFold(id);
+      }
+    };
+    fromHash();
+    window.addEventListener("hashchange", fromHash);
+    return () => window.removeEventListener("hashchange", fromHash);
+  }, [stories]);
   return (
     <main className={styles.page}>
       {/* The room's desk fills the page; the books on it are the navigation. */}
@@ -126,6 +177,7 @@ export default function AboutBooks({ stories, intro }: { stories: Story[]; intro
               <h2 className={styles.panelTitle}>{s.title}</h2>
               {s.rows && <Projects rows={s.rows} />}
               {s.items && <Items items={s.items} />}
+              {s.folds && <Folds folds={s.folds} open={openFold} onToggle={(id) => setOpenFold((cur) => (cur === id ? null : id))} />}
               {s.groups?.map((g) => (
                 <div key={g.label} className={styles.group}>
                   <h3 className={styles.groupLabel}>{g.label}</h3>
