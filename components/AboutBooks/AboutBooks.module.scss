@@ -335,8 +335,6 @@
    The desk occupies the bottom third and fades up into the page so the seam is not a hard edge. */
 @media (max-width: 760px) {
   .page {
-    display: grid;
-    grid-template-rows: 1fr;
     height: 100%;
     min-height: 0;
     overflow: hidden;
@@ -344,11 +342,12 @@
   }
 
   .overlay {
-    grid-row: 1;
-    align-self: start;
+    position: absolute;
     z-index: 1;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 14px;
+    top: 0;
+    right: 0;
+    left: 0;
+    display: block;
     height: 66.6667%;
     min-height: 0;
     overflow-x: hidden;
@@ -362,11 +361,9 @@
   }
 
   .scene {
-    grid-row: 1;
-    align-self: end;
+    position: absolute;
     z-index: 0;
-    position: relative;
-    inset: auto;
+    inset: auto 0 0 0;
     height: calc(33.3333% + 80px);
     min-height: 0;
     overflow: hidden;
