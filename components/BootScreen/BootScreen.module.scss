@@ -51,7 +51,8 @@
 
 .word {
   position: absolute;
-  top: 0;
+  /* Letter bodies sit high in the 80-unit box (center 33.9 vs the icon's 40). */
+  top: calc(var(--u) * 6.12);
   left: calc(var(--u) * 120);
   display: block;
   width: calc(var(--u) * 214.484);
@@ -77,6 +78,16 @@
   right: 50%;
   bottom: -2px;
   width: calc(var(--u) * 200);
+  background: #131316;
+  content: "";
+}
+
+.cover::after {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  height: calc(var(--u) * 6.12);
   background: #131316;
   content: "";
 }

@@ -3,6 +3,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import { DoubleSide, type Group } from "three";
+import Clickable from "../Clickable";
 import { SHEET_CAB, rng } from "../layout";
 import { useCanvasTexture, type Draw } from "./canvasTexture";
 import { Box, Cyl, Rod } from "./primitives";
@@ -246,13 +247,15 @@ export default function SheetCabinet({ x1 }: { x1: number }) {
       <Box size={[W, H, 0.008]} position={[cx, H / 2, cz - D / 2 + 0.004]} color="#3e271b" roughness={0.6} />
       {/* Left compartment holds the math textbooks (placed by the scene); right compartment holds scores. */}
       <Compartment seed={29} floorY={floorY} cx={cx + W / 4 - T / 4} cz={cz + 0.02} width={compW} />
-      {/* A couple of record sleeves leaning against the left side, in the gap by the desk. */}
-      {[
-        { c: "#e3b23c", dz: 0.0 },
-        { c: "#2f4858", dz: 0.012 },
-      ].map(({ c, dz }) => (
-        <Box key={c} size={[0.004, 0.31, 0.31]} position={[cx - W / 2 - 0.012 - dz * 1.5, 0.155, cz + 0.02 + dz]} rotation={[0, 0, -0.05]} color={c} roughness={0.6} />
-      ))}
+      {/* Yellow and blue sleeves in the gap by the desk. Quiet link: no hover, not in the room guide. */}
+      <Clickable quiet href="/life" title="" label={[cx - W / 2, 0.3, cz]}>
+        {[
+          { c: "#e3b23c", dz: 0.0 },
+          { c: "#2f4858", dz: 0.012 },
+        ].map(({ c, dz }) => (
+          <Box key={c} size={[0.004, 0.31, 0.31]} position={[cx - W / 2 - 0.012 - dz * 1.5, 0.155, cz + 0.02 + dz]} rotation={[0, 0, -0.05]} color={c} roughness={0.6} />
+        ))}
+      </Clickable>
     </group>
   );
 }

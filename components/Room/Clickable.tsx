@@ -46,9 +46,10 @@ export type Zone = { position: Vec3; size: Vec3 };
 export default function Clickable({
   label,
   zones,
+  quiet = false,
   children,
   ...target
-}: Target & { label: Vec3; zones?: Zone[]; children: ReactNode }) {
+}: Target & { label: Vec3; zones?: Zone[]; quiet?: boolean; children: ReactNode }) {
   const router = useRouter();
   const lift = useRef<Group>(null);
   const [hovered, setHovered] = useState(false);
@@ -96,9 +97,11 @@ export default function Clickable({
     <group
       onPointerOver={(e) => {
         e.stopPropagation();
-        setHovered(true);
+        if (!quiet) setHovered(true);
       }}
-      onPointerOut={() => setHovered(false)}
+      onPointerOut={() => {
+        if (!quiet) setHovered(false);
+      }}
       onClick={onClick}
     >
       <group ref={lift}>{children}</group>

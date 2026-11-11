@@ -77,7 +77,7 @@ export default function AboutPage() {
       images: [photo(12, "志工經歷"), photo(16, "志工經歷")],
       items: lines("志工經歷").map(item),
     },
-    // Its own book; the room's LEGO piano and guitars link here (/about#music).
+    // Its own book; the room's guitars link here (/about#music). The LEGO piano opens the YouTube channel.
     {
       id: "music",
       title: "音樂經歷",

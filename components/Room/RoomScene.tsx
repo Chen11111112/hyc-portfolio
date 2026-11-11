@@ -714,8 +714,8 @@ function Room({ resetRef, night }: { resetRef: MutableRefObject<(() => void) | n
         <Pegboard />
         <PegboardPhotos />
       </Clickable>
-      {/* LEGO piano → 興趣經歷 › 其他 (單車環島、打工換宿…) on /about. */}
-      <Clickable href="/about#music" title="音樂經歷" label={[PIANO_POS[0], SHEET_CAB.h + 0.5, 0.3]}>
+      {/* LEGO piano → YouTube channel. */}
+      <Clickable href={MUSIC_HREF} title="YouTube" label={[PIANO_POS[0], SHEET_CAB.h + 0.5, 0.3]}>
         <LegoPiano />
       </Clickable>
       {/* 專案經歷: touching any poster lights them all → the 專案經歷 book on /about. */}
