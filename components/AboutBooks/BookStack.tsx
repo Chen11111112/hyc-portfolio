@@ -313,8 +313,8 @@ function Sun() {
 }
 
 /**
- * Frames the L-shaped corner for the viewport, facing the back wall head-on: on wide screens the books sit ~33% across (the panel floats
- * over the right), solved from the actual aspect ratio; on narrow screens the books are centred.
+ * Frames the desk head-on. Wide screens lens-shift the books to ~33% across so the panel can sit on the
+ * right. Phones use the page width, not the short bottom strip: the whole scene slides right.
  */
 function CameraRig() {
   const get = useThree((s) => s.get);
@@ -322,19 +322,15 @@ function CameraRig() {
   useLayoutEffect(() => {
     const camera = get().camera as PerspectiveCamera;
     const aspect = size.width / Math.max(size.height, 1);
-    // The phone layout's pinned strip is wider than tall but has no panel beside it, so only treat
-    // clearly landscape viewports as "wide".
-    const wide = aspect >= 1.3;
-    // Camera sits straight in front of the book row (so a pulled-out book moves straight toward you and
-    // never slides over its neighbours). On wide screens the frame is lens-shifted, not rotated, so the
-    // row lands ~33% across, clear of the panel; on phones it stays centred.
+    const phone = window.matchMedia("(max-width: 760px)").matches;
+    const wide = !phone && aspect >= 1.3;
+    // Straight in front of the row, so a pulled-out book moves toward you and not over its neighbours.
     const booksX = -0.06;
     camera.position.set(booksX, wide ? 0.72 : 0.64, wide ? 2.0 : 1.6);
     camera.lookAt(booksX, 0.3, 0);
     const tanHalf = Math.tan(((camera.fov / 2) * Math.PI) / 180);
-    const shift = wide ? 0.5 - 0.33 : 0; // fraction of screen width to move the row left
-    // three.js shifts the frustum by near·filmOffset/filmWidth, and the near plane is
-    // near·2·tan(fov/2)·aspect wide, so this moves everything left by `shift` of the screen width.
+    // Positive shift moves the scene left. Phones move it right by a fifth of the strip.
+    const shift = wide ? 0.5 - 0.33 : phone ? -0.2 : 0;
     camera.filmOffset = shift * 2 * tanHalf * aspect * camera.getFilmWidth();
     camera.updateProjectionMatrix();
   }, [get, size]);
