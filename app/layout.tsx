@@ -6,6 +6,10 @@ import PageEnter from "@/components/PageEnter/PageEnter";
 import layoutStyles from "./layout.module.scss";
 import {
   PERSON_NAME,
+  SHARE_IMAGE,
+  SHARE_IMAGE_ALT,
+  SHARE_IMAGE_HEIGHT,
+  SHARE_IMAGE_WIDTH,
   SITE_DESCRIPTION,
   SITE_KEYWORDS,
   SITE_NAME,
@@ -61,13 +65,21 @@ export const metadata: Metadata = {
     siteName: "Hy.C — 陳泓毓",
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    images: [{ url: "/1.png", alt: "Hy.C 陳泓毓 作品集" }],
+    images: [
+      {
+        url: SHARE_IMAGE,
+        width: SHARE_IMAGE_WIDTH,
+        height: SHARE_IMAGE_HEIGHT,
+        alt: SHARE_IMAGE_ALT,
+        type: "image/png",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    images: ["/1.png"],
+    images: [SHARE_IMAGE],
   },
 };
 
@@ -80,6 +92,7 @@ const jsonLd = {
       name: PERSON_NAME,
       alternateName: ["Hy.C", "HyC", "HYC", "陳毓", "Hy C"],
       url: SITE_URL,
+      image: `${SITE_URL}${SHARE_IMAGE}`,
       jobTitle: "全端工程師",
       description: SITE_DESCRIPTION,
     },

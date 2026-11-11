@@ -194,7 +194,7 @@ const drawBadge: Draw = (ctx, w, h) => {
   ctx.fillText(b.org, w / 2, h - 18);
 };
 
-function Pin({ position, color }: { position: Vec3; color: string }) {
+export function Pin({ position, color }: { position: Vec3; color: string }) {
   return (
     <mesh position={position} castShadow>
       <sphereGeometry args={[0.006, 10, 8]} />

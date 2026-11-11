@@ -28,7 +28,7 @@ import type { Story } from "./AboutBooks";
 // books standing upright between bookends (spines toward you), a LEGO flower pot at the end.
 // Real-world scale (metres), same palette and lighting feel as the room.
 const DESK = { color: "#5a3a28", front: "#6e4a33" };
-const WALL = "#dfe5ea";
+export const WALL = "#dfe5ea";
 const ROW_X0 = -0.21; // left bookend
 const GAP = 0.004;
 /** Entrance animation: wait, then drop each book from this height, one after another. */
@@ -179,7 +179,8 @@ function Bookend({ x, flip }: { x: number; flip?: boolean }) {
   );
 }
 
-function Desk() {
+/** `win` overrides the side-wall window opening (the Life page uses a bigger one). */
+export function Desk({ win = WIN }: { win?: WindowOpening } = {}) {
   return (
     <group>
       <RoundedBox args={[2.2 - SIDE_X, 0.03, 0.55]} radius={0.006} smoothness={3} position={[(SIDE_X + 2.2) / 2, -0.015, 0.13]} receiveShadow castShadow>
@@ -199,7 +200,7 @@ function Desk() {
         <cylinderGeometry args={[0.0055, 0.0055, 0.14, 12]} />
         <meshStandardMaterial color="#c3c6ca" roughness={0.3} metalness={0.85} />
       </mesh>
-      <WallWithWindow />
+      <WallWithWindow win={win} />
       {/* Floor at real desk height below (0.75 m), light wood like the room. */}
       <mesh position={[(SIDE_X + 3.6) / 2, -0.75, 1.2]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[3.6 - SIDE_X, 3]} />
@@ -215,6 +216,7 @@ const WALL_T = 0.04;
 const BACK_Z = -0.15; // back wall front face
 /** Window opening on the side wall (z along the wall, y up). */
 const WIN = { z0: 0.0, z1: 0.3, y0: 0.16, y1: 0.53 };
+export type WindowOpening = typeof WIN;
 const SPAN = { y0: -0.7, y1: 2.3, zFar: 2.6, xFar: 3.6 };
 
 function WallBox({ position, size }: { position: [number, number, number]; size: [number, number, number] }) {
@@ -226,7 +228,7 @@ function WallBox({ position, size }: { position: [number, number, number]; size:
   );
 }
 
-function WallWithWindow() {
+function WallWithWindow({ win: WIN }: { win: WindowOpening }) {
   const { y0, y1, zFar, xFar } = SPAN;
   const sx = SIDE_X - WALL_T / 2;
   const zBack = BACK_Z - WALL_T;
@@ -282,7 +284,7 @@ const SUN_TARGET = new Vector3(0.23, 0.015, 0.07);
 const WIN_CENTRE = new Vector3(SIDE_X, (WIN.y0 + WIN.y1) / 2, (WIN.z0 + WIN.z1) / 2);
 const SUN_POS = WIN_CENTRE.clone().addScaledVector(SUN_TARGET.clone().sub(WIN_CENTRE).normalize(), -3);
 
-function Sun() {
+export function Sun() {
   const light = useRef<DirectionalLight>(null);
   const target = useRef<Object3D>(null);
   useLayoutEffect(() => {
@@ -345,7 +347,7 @@ function CameraRig() {
   return null;
 }
 
-const WALL_Z = -0.148;
+export const WALL_Z = -0.148;
 const CERT_SCALE = 0.5;
 
 /** The four certificates in a small 田 grid on the wall above the books; click → 證照. */
@@ -403,7 +405,7 @@ function WallPhotos() {
   );
 }
 
-function Pencil({ position, yaw, color = "#f2c230" }: { position: [number, number, number]; yaw: number; color?: string }) {
+export function Pencil({ position, yaw, color = "#f2c230" }: { position: [number, number, number]; yaw: number; color?: string }) {
   return (
     <group position={position} rotation={[0, yaw, Math.PI / 2]}>
       <mesh castShadow>
@@ -423,7 +425,7 @@ function Pencil({ position, yaw, color = "#f2c230" }: { position: [number, numbe
 }
 
 /** Ceramic cup with a few pencils standing in it. */
-function PencilCup({ x }: { x: number }) {
+export function PencilCup({ x }: { x: number }) {
   const tips: [number, number, number, string][] = [
     [0.012, 0.17, 0.01, "#f2c230"],
     [-0.016, 0.16, 0.014, "#2d6cdf"],

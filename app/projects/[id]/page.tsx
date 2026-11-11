@@ -2,6 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import HomeContent from "@/components/HomeContent/HomeContent";
 import { getProjectById, getProjects } from "@/lib/projects";
+import {
+  SHARE_IMAGE,
+  SHARE_IMAGE_ALT,
+  SHARE_IMAGE_HEIGHT,
+  SHARE_IMAGE_WIDTH,
+} from "@/lib/site";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -25,9 +31,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       url: `/projects/${project.id}`,
-      images: [{ url: project.image, alt: project.title }],
+      images: [
+        {
+          url: SHARE_IMAGE,
+          width: SHARE_IMAGE_WIDTH,
+          height: SHARE_IMAGE_HEIGHT,
+          alt: SHARE_IMAGE_ALT,
+          type: "image/png",
+        },
+      ],
     },
-    twitter: { title, description, images: [project.image] },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [SHARE_IMAGE],
+    },
   };
 }
 

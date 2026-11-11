@@ -1,251 +1,142 @@
 "use client";
 
-import Image from "next/image";
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useRef, type CSSProperties, type PointerEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { BOARDS } from "./lifeContent";
 import styles from "./LifeWall.module.scss";
 
-const PINS = ["#d64545", "#3d6ea8", "#d4a017", "#2f8f5b"];
+/** The 3D desk and cork boards are client-only, like the About page's book stack. */
+const LifeScene = dynamic(() => import("./LifeScene"), { ssr: false, loading: () => <div className={styles.loading} /> });
 
-type Shot = { src: string; alt: string; place: string; ratio: string };
+/** Horizontal travel (px) that counts as a swipe to the other board. */
+const SWIPE_PX = 50;
+/** Accumulated trackpad/wheel sideways scroll (px) that flips the board, and the pause before the next flip. */
+const WHEEL_PX = 60;
+const WHEEL_COOLDOWN_MS = 700;
 
-const BOARD_ONE: Shot[] = [
-  { src: "/life/concert.webp", alt: "音樂廳裡的合影", place: styles.a1, ratio: "576 / 768" },
-  { src: "/life/kimono.webp", alt: "和室裡穿和服", place: styles.a2, ratio: "576 / 768" },
-  { src: "/life/street.webp", alt: "街上帶著相機", place: styles.a3, ratio: "1536 / 864" },
-  { src: "/life/award.webp", alt: "Python 競賽第一名", place: styles.a4, ratio: "1024 / 769" },
-  { src: "/life/donki.webp", alt: "唐吉訶德電扶梯", place: styles.a5, ratio: "576 / 768" },
-  { src: "/life/shrine.webp", alt: "夜裡的神社", place: styles.a6, ratio: "1536 / 864" },
-  { src: "/life/sunny-room.webp", alt: "窗邊的陽光", place: styles.a7, ratio: "1024 / 768" },
-  { src: "/life/recital.webp", alt: "鋼琴演奏會場", place: styles.a8, ratio: "576 / 768" },
-  { src: "/life/photo-booth.webp", alt: "拍貼機照片", place: styles.a9, ratio: "512 / 768" },
-  { src: "/life/train.webp", alt: "車窗邊的自拍", place: styles.a10, ratio: "1024 / 768" },
-];
-
-const BOARD_TWO: Shot[] = [
-  { src: "/life/concert-seat.webp", alt: "音樂廳座位區", place: styles.b1, ratio: "576 / 768" },
-  { src: "/life/mitsui.webp", alt: "三井的自拍", place: styles.b2, ratio: "1024 / 768" },
-  { src: "/life/matching-blue.webp", alt: "同色藍衣服", place: styles.b3, ratio: "1024 / 768" },
-  { src: "/life/warped-mirror.webp", alt: "曲面鏡自拍", place: styles.b4, ratio: "432 / 768" },
-  { src: "/life/cat-mirror.webp", alt: "和橘貓的鏡子自拍", place: styles.b5, ratio: "432 / 768" },
-  { src: "/life/cafe.webp", alt: "咖啡廳裡的玩偶", place: styles.b6, ratio: "432 / 768" },
-  { src: "/life/close-selfie.webp", alt: "靠在一起的自拍", place: styles.b7, ratio: "576 / 768" },
-  { src: "/life/convex-mirror.webp", alt: "路邊的凸面鏡", place: styles.b8, ratio: "576 / 768" },
-  { src: "/life/night.webp", alt: "夜裡的身影", place: styles.b9, ratio: "1024 / 768" },
-];
-
-const CLAYS: { color: string; left: string; bottom: string; width: string; height: string; radius: string }[] = [
-  { color: "#d97862", left: "46%", bottom: "22%", width: "clamp(40px, 4.5vw, 64px)", height: "clamp(36px, 6vh, 58px)", radius: "46% 42% 36% 40% / 48% 44% 34% 40%" },
-  { color: "#e7c27a", left: "54%", bottom: "40%", width: "clamp(34px, 3.6vw, 52px)", height: "clamp(30px, 4.5vh, 44px)", radius: "14px" },
-  { color: "#8eaa86", left: "60%", bottom: "16%", width: "clamp(44px, 5vw, 72px)", height: "clamp(40px, 7vh, 64px)", radius: "38% 42% 28% 32% / 30% 36% 44% 40%" },
-  { color: "#d9b39a", left: "70%", bottom: "34%", width: "clamp(36px, 4vw, 56px)", height: "clamp(36px, 4vw, 56px)", radius: "50%" },
-  { color: "#7eafc6", left: "76%", bottom: "18%", width: "clamp(40px, 4.4vw, 62px)", height: "clamp(34px, 6vh, 54px)", radius: "10px 26px 12px 22px" },
-];
-
-const PENCILS = ["#f2c230", "#2d6cdf", "#1d1d1f", "#e2483d", "#3c9a5f", "#f2c230"];
-
-function Photo({ src, alt, place, pin, ratio }: Shot & { pin: string }) {
-  return (
-    <figure className={`${styles.photo} ${place}`}>
-      <span className={styles.pin} style={{ background: pin }} aria-hidden />
-      <span className={styles.frame} style={{ aspectRatio: ratio }}>
-        <Image src={src} alt={alt} fill sizes="(max-width: 760px) 46vw, 24vw" className={styles.shot} draggable={false} />
-      </span>
-    </figure>
-  );
-}
-
-function Sticker({ label, className, children }: { label: string; className: string; children: ReactNode }) {
-  return (
-    <div className={`${styles.sticker} ${className}`} role="img" aria-label={label}>
-      <svg viewBox="0 0 80 80" aria-hidden>
-        {children}
-      </svg>
-    </div>
-  );
-}
-
-const stroke = { stroke: "#fff", strokeWidth: 4, strokeLinejoin: "round" as const, strokeLinecap: "round" as const };
-
-function Dino() {
-  return (
-    <Sticker label="恐龍貼紙" className={styles.dino}>
-      <path
-        {...stroke}
-        fill="#3f8f4e"
-        d="M16 50c-8 2-12 10-6 12 6-2 10-1 12 2l-2 12h8l2-12c6 4 14 2 18-2l2 14h8l-4-16c8-2 14-10 10-16 6-2 8-8 4-12-6-2-12 2-14 8-6-4-14 0-16 6-8-2-16 2-18 8-4-2-10 0-12 4z"
-      />
-      <circle cx="58" cy="30" r="1.6" fill="#1d1d21" />
-    </Sticker>
-  );
-}
-
-function Hedgehog() {
-  return (
-    <Sticker label="刺蝟貼紙" className={styles.hedgehog}>
-      <path
-        {...stroke}
-        fill="#c4844e"
-        d="M22 46l6-14 5 10 7-16 6 12 8-14 6 12 7-12 5 12 6-8 4 10c2 8-2 16-10 20-10 6-28 8-40 2-8-4-14-12-10-14z"
-      />
-      <circle cx="58" cy="44" r="1.5" fill="#1d1d21" />
-      <circle cx="66" cy="45" r="1.5" fill="#1d1d21" />
-      <ellipse cx="68" cy="50" rx="2.4" ry="1.6" fill="#a85a68" />
-    </Sticker>
-  );
-}
-
-function Kitten() {
-  return (
-    <Sticker label="小貓貼紙" className={styles.kitten}>
-      <path
-        {...stroke}
-        fill="#f2a35e"
-        d="M28 22l-6-12 12 8 8-2 8 2 12-8-4 14c8 4 12 12 10 20-2 12-14 20-28 18-8 8-4 10 2 12 8 2 14-4 14-4-10 2-22-2-26-12-8 2-16-2-16-12 0-10 6-16 12-20z"
-      />
-      <path fill="#f6c7c0" d="M26 16l4 6 5-4zM48 14l5 6 3-7z" />
-      <circle cx="36" cy="32" r="1.5" fill="#1d1d21" />
-      <circle cx="46" cy="32" r="1.5" fill="#1d1d21" />
-      <ellipse cx="41" cy="37" rx="1.8" ry="1.3" fill="#e07a8a" />
-    </Sticker>
-  );
-}
-
-function Flower({ cx, cy, petal }: { cx: number; cy: number; petal: string }) {
-  return (
-    <g>
-      {[0, 72, 144, 216, 288].map((deg) => {
-        const a = (deg * Math.PI) / 180;
-        return <circle key={deg} cx={cx + Math.cos(a) * 7} cy={cy + Math.sin(a) * 7} r="6" fill={petal} />;
-      })}
-      <circle cx={cx} cy={cy} r="4.5" fill="#f7d154" />
-    </g>
-  );
-}
-
-function DeskObjects() {
-  return (
-    <>
-      <div className={styles.lego} role="img" aria-label="樂高花卉">
-        <svg viewBox="0 0 88 124" aria-hidden>
-          <rect x="21" y="28" width="6" height="54" rx="1" fill="#2f6e2a" />
-          <rect x="59" y="18" width="6" height="64" rx="1" fill="#2f6e2a" />
-          <rect x="43" y="42" width="6" height="40" rx="1" fill="#2f6e2a" />
-          <Flower cx={24} cy={28} petal="#f28cb1" />
-          <Flower cx={62} cy={18} petal="#f5f1e6" />
-          <Flower cx={46} cy={42} petal="#c45bd0" />
-          <rect x="18" y="86" width="52" height="10" rx="1" fill="#7d4630" />
-          <rect x="22" y="94" width="44" height="26" rx="2" fill="#6e3b24" />
-          {[30, 44, 58].map((x) => (
-            <circle key={x} cx={x} cy="84" r="4" fill="#3b2a1e" />
-          ))}
-        </svg>
-      </div>
-      <div className={styles.vinyl} role="img" aria-label="黑膠">
-        <span className={styles.plinth} />
-        <span className={styles.disc} />
-        <span className={styles.arm} />
-      </div>
-      <div className={styles.pencils} role="img" aria-label="鉛筆">
-        {PENCILS.map((color, i) => (
-          <span key={color + i} className={styles.stick} style={{ "--c": color, "--i": i } as CSSProperties} />
-        ))}
-        <span className={styles.cup} />
-      </div>
-    </>
-  );
-}
-
-function Puppy() {
-  return (
-    <Sticker label="小狗貼紙" className={styles.puppy}>
-      <path
-        {...stroke}
-        fill="#e6c7a2"
-        d="M34 24c-8 2-12 10-10 18 2 2-4 6-2 12 4 10 16 16 28 14 10-2 16-10 16-18 4-2 6-8 2-12-2-8-8-16-16-16-4-6-12-8-18 2z"
-      />
-      <ellipse cx="50" cy="40" rx="7" ry="5" fill="#f7e6d4" />
-      <circle cx="40" cy="32" r="1.5" fill="#1d1d21" />
-      <circle cx="50" cy="32" r="1.5" fill="#1d1d21" />
-      <ellipse cx="54" cy="40" rx="2.2" ry="1.6" fill="#1d1d21" />
-    </Sticker>
-  );
-}
-
+/**
+ * Life page: the room's desk against the wall (same scene as About) with two cork boards of photos and
+ * stickers. Drag or swipe sideways (the wall follows your finger, then snaps), two-finger swipe on a
+ * trackpad, the arrow keys, or the board buttons move between the boards.
+ */
 export default function LifeWall() {
-  const wallRef = useRef<HTMLDivElement>(null);
-  const drag = useRef({ x: 0, left: 0, active: false });
+  const [board, setBoard] = useState(0);
+  const sceneRef = useRef<HTMLDivElement>(null);
+  /** Live drag distance in px, read by the camera every frame (no re-render while dragging). */
+  const dragPx = useRef(0);
+  const drag = useRef<{ id: number; x: number; y: number; horizontal: boolean | null } | null>(null);
+  const boardRef = useRef(0);
+  const last = BOARDS.length - 1;
+  const go = (i: number) => {
+    const next = Math.max(0, Math.min(last, i));
+    boardRef.current = next;
+    setBoard(next);
+  };
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") go(boardRef.current + 1);
+      if (e.key === "ArrowLeft") go(boardRef.current - 1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Trackpad two-finger swipe / shift+wheel: sideways scroll flips the board. Non-passive so the
+  // browser's swipe-to-go-back doesn't fire instead.
+  useEffect(() => {
+    const el = sceneRef.current;
+    if (!el) return;
+    let acc = 0;
+    let lockedUntil = 0;
+    const onWheel = (e: WheelEvent) => {
+      const dx = e.deltaX || (e.shiftKey ? e.deltaY : 0);
+      if (Math.abs(dx) <= Math.abs(e.deltaY) && !e.shiftKey) return;
+      e.preventDefault();
+      const now = performance.now();
+      if (now < lockedUntil) return;
+      acc += dx;
+      if (Math.abs(acc) >= WHEEL_PX) {
+        go(boardRef.current + (acc > 0 ? 1 : -1));
+        acc = 0;
+        lockedUntil = now + WHEEL_COOLDOWN_MS;
+      }
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType !== "mouse" || e.button !== 0) return;
-    const el = wallRef.current;
-    if (!el) return;
-    drag.current = { x: e.clientX, left: el.scrollLeft, active: true };
-    el.setPointerCapture(e.pointerId);
-    el.style.scrollSnapType = "none";
-    el.style.scrollBehavior = "auto";
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY, horizontal: null };
+    e.currentTarget.setPointerCapture(e.pointerId);
   };
-
   const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
-    const el = wallRef.current;
-    if (!el || !drag.current.active) return;
-    el.scrollLeft = drag.current.left - (e.clientX - drag.current.x);
+    const d = drag.current;
+    if (!d || d.id !== e.pointerId) return;
+    const dx = e.clientX - d.x;
+    const dy = e.clientY - d.y;
+    // Decide once whether this gesture is sideways; vertical ones are left alone.
+    if (d.horizontal === null && Math.hypot(dx, dy) > 8) d.horizontal = Math.abs(dx) > Math.abs(dy);
+    if (d.horizontal) dragPx.current = dx;
   };
-
-  const onPointerUp = () => {
-    const el = wallRef.current;
-    if (!el || !drag.current.active) return;
-    drag.current.active = false;
-    const index = Math.round(el.scrollLeft / el.clientWidth);
-    el.style.scrollSnapType = "";
-    el.style.scrollBehavior = "";
-    el.scrollTo({ left: index * el.clientWidth, behavior: "smooth" });
+  const endDrag = (e: PointerEvent<HTMLDivElement>) => {
+    const d = drag.current;
+    if (!d || d.id !== e.pointerId) return;
+    drag.current = null;
+    const dx = dragPx.current;
+    dragPx.current = 0;
+    // Drag the wall left to see the board on the right.
+    if (d.horizontal && Math.abs(dx) >= SWIPE_PX) go(boardRef.current + (dx < 0 ? 1 : -1));
   };
 
   return (
     <main className={styles.page}>
-      <h1 className={styles.heading}>生活</h1>
-      <Link href="/" className={styles.back}>
-        ← 回到房間
-      </Link>
-
       <div
-        ref={wallRef}
-        className={styles.wall}
-        aria-label="軟木板照片牆，往左滑到第二面"
+        ref={sceneRef}
+        className={styles.scene}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        aria-hidden
       >
-        <section className={styles.board} aria-label="第一面軟木板">
-          <div className={styles.cork}>
-            {BOARD_ONE.map((photo, i) => (
-              <Photo key={photo.src} {...photo} pin={PINS[i % PINS.length]} />
-            ))}
-            <Dino />
-            <Hedgehog />
-          </div>
-        </section>
-        <section className={styles.board} aria-label="第二面軟木板">
-          <div className={styles.cork}>
-            {BOARD_TWO.map((photo, i) => (
-              <Photo key={photo.src} {...photo} pin={PINS[i % PINS.length]} />
-            ))}
-            <Kitten />
-            <Puppy />
-          </div>
-        </section>
+        <LifeScene board={board} dragPx={dragPx} />
       </div>
 
-      <div className={styles.desk}>
-        <div className={styles.surface}>
-          <DeskObjects />
-          {CLAYS.map((clay) => (
-            <span key={clay.color} className={styles.clay} style={clay} role="img" aria-label="黏土模型" />
-          ))}
-        </div>
-        <div className={styles.front} />
+      <header className={styles.header}>
+        <Link href="/" className={styles.back}>
+          ← 回到房間
+        </Link>
+        <h1 className={styles.title}>Life</h1>
+      </header>
+
+      <nav className={styles.boards} aria-label="切換軟木板">
+        {BOARDS.map((b, i) => (
+          <button key={b.label} type="button" className={styles.boardButton} aria-pressed={board === i} onClick={() => go(i)}>
+            {b.label}
+          </button>
+        ))}
+      </nav>
+
+      {/* What the boards show, for screen readers and search (the 3D scene itself is hidden from them). */}
+      <div className={styles.srOnly}>
+        {BOARDS.map((b) => (
+          <section key={b.label} aria-label={b.label}>
+            <ul>
+              {b.photos.map((p) => (
+                <li key={p.src}>{p.alt}</li>
+              ))}
+              {b.stickers.map((s) => (
+                <li key={s.label}>{s.label}</li>
+              ))}
+            </ul>
+          </section>
+        ))}
+        <p>書桌上有黑膠唱盤、樂高花、筆筒和鉛筆，還有黏土做的小貓、小狗。</p>
       </div>
     </main>
   );
