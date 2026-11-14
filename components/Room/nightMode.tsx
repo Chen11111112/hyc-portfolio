@@ -25,20 +25,36 @@ export function useNightMix() {
 
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-const STORAGE_KEY = "hyc-room-night";
+/**
+ * Day/night follows the device's light/dark setting (live), unless the visitor flips the toggle.
+ * That choice is an override for this visit only (sessionStorage), so the next visit starts from
+ * the device again; choosing what the device already says simply drops the override.
+ */
+const DARK_QUERY = "(prefers-color-scheme: dark)";
+const OVERRIDE_KEY = "hyc-room-night-override";
 
-export function readStoredNight(): boolean {
+export function subscribeDeviceDark(onChange: () => void) {
+  const mq = window.matchMedia(DARK_QUERY);
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
+
+export const isDeviceDark = () => window.matchMedia(DARK_QUERY).matches;
+
+export function readNightOverride(): boolean | null {
   try {
-    return window.localStorage.getItem(STORAGE_KEY) === "1";
+    const v = window.sessionStorage.getItem(OVERRIDE_KEY);
+    return v === null ? null : v === "1";
   } catch {
-    return false;
+    return null;
   }
 }
 
-export function storeNight(night: boolean) {
+export function storeNightOverride(night: boolean | null) {
   try {
-    window.localStorage.setItem(STORAGE_KEY, night ? "1" : "0");
+    if (night === null) window.sessionStorage.removeItem(OVERRIDE_KEY);
+    else window.sessionStorage.setItem(OVERRIDE_KEY, night ? "1" : "0");
   } catch {
-    // Storage unavailable (private mode, blocked): the toggle still works for this visit.
+    // Storage unavailable (private mode, blocked): the toggle still works until the page reloads.
   }
 }

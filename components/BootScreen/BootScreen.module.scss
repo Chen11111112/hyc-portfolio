@@ -59,35 +59,26 @@
   height: var(--icon);
 }
 
-// Background-coloured copy of the icon's outline (plus everything to its left),
-// stacked between the wordmark and the icon. It hides the wordmark until it has
-// cleared the icon, including through the cut-out ".C".
+// Background-coloured mask stacked between the wordmark and the icon: the
+// icon's square footprint plus everything to its left, tall enough to also
+// cover the wordmark's descender (the "y" reaches 6.12 units below the icon).
+// Square corners on purpose: with rounded ones the wordmark would show through
+// the gaps outside the icon's rounded corners while it slides out.
 .cover {
   position: absolute;
-  top: 0;
+  top: -2px;
   left: 0;
   width: var(--icon);
-  height: var(--icon);
-  border-radius: calc(var(--u) * 18);
+  height: calc(var(--icon) + var(--u) * 6.12 + 4px);
   background: #131316;
 }
 
 .cover::before {
   position: absolute;
-  top: -2px;
+  top: 0;
   right: 50%;
-  bottom: -2px;
+  bottom: 0;
   width: calc(var(--u) * 200);
-  background: #131316;
-  content: "";
-}
-
-.cover::after {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  height: calc(var(--u) * 6.12);
   background: #131316;
   content: "";
 }

@@ -2,7 +2,7 @@
 
 import { ContactShadows, Environment, OrbitControls, RoundedBox } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Component, Suspense, useEffect, useLayoutEffect, useRef, useState, type MutableRefObject, type ReactNode } from "react";
+import { Component, Suspense, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type MutableRefObject, type ReactNode } from "react";
 import { Color, DoubleSide, InstancedMesh, Object3D, PerspectiveCamera, Vector3, type DirectionalLight, type HemisphereLight } from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { markBootReady } from "@/lib/boot";
@@ -57,12 +57,12 @@ import {
   WHITEBOARD,
   Whiteboard,
 } from "./props/BackWallExtras";
-import DysonFan from "./props/DysonFan";
+import DysonFan, { FAN_POS } from "./props/DysonFan";
 import MidiKeyboard from "./props/MidiKeyboard";
 import { Box } from "./props/primitives";
 import SheetCabinet, { MathTextbooks, Nas, Turntable } from "./props/SheetCabinet";
-import { Football, GuitarFootstool } from "./props/UnderDesk";
-import { CLOCK, HandwrittenScores, PhotoString, WALL_NOTES, WallClock, WallNotes } from "./props/SideWallExtras";
+import { Football, GuitarFootstool, MalletHolder } from "./props/UnderDesk";
+import { CLOCK, PhotoString, SCORES, ScoreSheet, WALL_NOTES, WallClock, WallNotes } from "./props/SideWallExtras";
 import Skis, { SKIS_CX } from "./props/Skis";
 import WoodFloor from "./props/WoodFloor";
 import SkyView from "./props/SkyView";
@@ -72,8 +72,27 @@ import Plants from "./props/Plants";
 import Posters from "./props/Posters";
 import { CERTIFICATES, MUSIC_HREF, ROOM_LINKS } from "@/lib/roomContent";
 import RoomGuide from "./RoomGuide";
+import RoomHint from "./RoomHint";
 import Clickable from "./Clickable";
-import { NightProvider, lerp, readStoredNight, storeNight, useNightMix } from "./nightMode";
+import {
+  BulbContents,
+  CableContents,
+  JewelleryContents,
+  MedicineContents,
+  OddsContents,
+  PhotoContents,
+  SlidingDrawer,
+  StationeryContents,
+} from "./props/Drawers";
+import {
+  NightProvider,
+  isDeviceDark,
+  lerp,
+  readNightOverride,
+  storeNightOverride,
+  subscribeDeviceDark,
+  useNightMix,
+} from "./nightMode";
 import styles from "./Room.module.scss";
 
 class Optional extends Component<{ children: ReactNode }, { on: boolean }> {
@@ -109,6 +128,11 @@ const WIN_TOP = 2.45;
 const LOOK: Vec3 = [DESK_CX + 0.3, DESK.top + 0.2, DESK.z0 + DESK.depth / 2];
 const ELEVATION = (26 * Math.PI) / 180;
 const AZIMUTH = Math.PI / 4;
+/**
+ * Orbit limit towards the window wall (radians from facing the back wall). Stops short of facing
+ * the wall square-on, where the bare end of the back wall (past the posters and skis) fills the view.
+ */
+const MAX_AZIMUTH = 1.25;
 /** Camera never rises above this (walls are 4 m), so it can't look over the wall tops. */
 const MAX_CAMERA_Y = 3.85;
 /**
@@ -383,29 +407,21 @@ function RollerBlind() {
   );
 }
 
-const DRAWER_FRONT = "#6e4a33";
-/** Centre drawer: starts just right of the drawer cabinet. */
 /** Row of shallow drawers under the desktop, spanning from the cabinet to the right leg. */
 const APRON = { x0: DESK.x0 + CABINET_W + SEAM, x1: LEG_X0 - SEAM, count: 3, h: 0.08, back: DESK.z0 + 0.2 };
 const APRON_W = (APRON.x1 - APRON.x0) / APRON.count;
-
-/** Brushed-metal bar pull on a drawer front at depth `z` (front face), centred at height `y`. */
-function DrawerPull({ z, y, width }: { z: number; y: number; width: number }) {
-  return (
-    <group position={[0, y, z]}>
-      <mesh position={[0, 0, 0.014]} rotation={[0, 0, Math.PI / 2]} castShadow>
-        <cylinderGeometry args={[0.0055, 0.0055, width, 12]} />
-        <meshStandardMaterial color="#c3c6ca" roughness={0.3} metalness={0.85} />
-      </mesh>
-      {[-1, 1].map((s) => (
-        <mesh key={s} position={[s * (width / 2 - 0.012), 0, 0.007]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.004, 0.004, 0.014, 10]} />
-          <meshStandardMaterial color="#c3c6ca" roughness={0.3} metalness={0.85} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
+/** Cabinet drawers, bottom to top, and the shallow row left to right: what each holds. */
+const CABINET_DRAWERS = [
+  { name: "雜物", contents: <OddsContents /> },
+  { name: "燈泡", contents: <BulbContents /> },
+  { name: "藥品", contents: <MedicineContents /> },
+  { name: "飾品", contents: <JewelleryContents /> },
+];
+const APRON_DRAWERS = [
+  { name: "文具", contents: <StationeryContents /> },
+  { name: "照片", contents: <PhotoContents /> },
+  { name: "充電線", contents: <CableContents /> },
+];
 
 function Desk() {
   const drawers = [0, 1, 2, 3].map((i) => {
@@ -428,32 +444,52 @@ function Desk() {
         <boxGeometry args={[CABINET_W, UNDER, PANEL_Z0 - 0.001 - DESK.z0]} />
         <meshStandardMaterial color={WOOD} roughness={0.74} metalness={0} />
       </mesh>
-      {/* Drawer stack: fronts a shade warmer than the carcass so the seams read, each with a bar pull. */}
-      {drawers.map((y) => (
-        <group key={y} position={[DESK.x0 + CABINET_W / 2, y, 0]}>
-          <mesh position={[0, 0, (PANEL_Z0 + PANEL_Z1) / 2]} castShadow receiveShadow>
-            <boxGeometry args={[CABINET_W - SEAM * 2, DRAWER_H, PANEL_T]} />
-            <meshStandardMaterial color={DRAWER_FRONT} roughness={0.66} metalness={0} />
-          </mesh>
-          <DrawerPull z={PANEL_Z1} y={DRAWER_H * 0.22} width={0.12} />
-        </group>
+      {/* Drawer stack: fronts a shade warmer than the carcass so the seams read; each opens on click. */}
+      {drawers.map((y, i) => (
+        <SlidingDrawer
+          key={y}
+          x={DESK.x0 + CABINET_W / 2}
+          y={y}
+          z={PANEL_Z0}
+          width={CABINET_W}
+          height={DRAWER_H}
+          seam={SEAM}
+          panelT={PANEL_T}
+          depth={0.6}
+          travel={0.36}
+          pullWidth={0.12}
+          pullY={DRAWER_H * 0.22}
+        >
+          {CABINET_DRAWERS[i].contents}
+        </SlidingDrawer>
       ))}
-      {/* Shallow drawers across the whole underside of the desktop: one carcass, three fronts. */}
-      <group position={[0, UNDER - APRON.h / 2 - 0.004, 0]}>
-        <mesh position={[(APRON.x0 + APRON.x1) / 2, 0.002, (APRON.back + PANEL_Z0) / 2]} castShadow receiveShadow>
-          <boxGeometry args={[APRON.x1 - APRON.x0, APRON.h + 0.004, PANEL_Z0 - APRON.back]} />
-          <meshStandardMaterial color={WOOD} roughness={0.74} metalness={0} />
-        </mesh>
-        {Array.from({ length: APRON.count }, (_, i) => (
-          <group key={i} position={[APRON.x0 + APRON_W * (i + 0.5), 0, 0]}>
-            <mesh position={[0, 0, (PANEL_Z0 + PANEL_Z1) / 2]} castShadow receiveShadow>
-              <boxGeometry args={[APRON_W - SEAM * 2, APRON.h, PANEL_T]} />
-              <meshStandardMaterial color={DRAWER_FRONT} roughness={0.66} metalness={0} />
-            </mesh>
-            <DrawerPull z={PANEL_Z1} y={0} width={0.14} />
-          </group>
-        ))}
-      </group>
+      {/* Shallow drawers across the whole underside of the desktop: one carcass, three drawers. */}
+      <mesh
+        position={[(APRON.x0 + APRON.x1) / 2, UNDER - APRON.h / 2 - 0.002, (APRON.back + PANEL_Z0) / 2]}
+        castShadow
+        receiveShadow
+      >
+        <boxGeometry args={[APRON.x1 - APRON.x0, APRON.h + 0.004, PANEL_Z0 - APRON.back]} />
+        <meshStandardMaterial color={WOOD} roughness={0.74} metalness={0} />
+      </mesh>
+      {APRON_DRAWERS.map((d, i) => (
+        <SlidingDrawer
+          key={d.name}
+          x={APRON.x0 + APRON_W * (i + 0.5)}
+          y={UNDER - APRON.h / 2 - 0.004}
+          z={PANEL_Z0}
+          width={APRON_W}
+          height={APRON.h}
+          seam={SEAM}
+          panelT={PANEL_T}
+          depth={PANEL_Z0 - APRON.back - 0.01}
+          travel={0.2}
+          pullWidth={0.14}
+          pullY={0}
+        >
+          {d.contents}
+        </SlidingDrawer>
+      ))}
       {/* Right leg; the knee space under the drawer row stays open. */}
       <mesh position={[(LEG_X0 + DESK.x1) / 2, UNDER / 2, DESK.z0 + (DESK.depth - 0.04) / 2]} castShadow receiveShadow>
         <boxGeometry args={[LEG_T, UNDER, DESK.depth - 0.04]} />
@@ -522,6 +558,13 @@ const TARGET_MAX = new Vector3(DESK.x1 + 1.35, 1.9, 2.5);
 const LOOK_V = new Vector3(...LOOK);
 /** Fraction of the zoom range (from fully out) over which panning freedom ramps up to the full room. */
 const PAN_RAMP = 0.55;
+/**
+ * Past the home angle (towards MAX_AZIMUTH) the camera orbits a pivot this far (metres) in front of
+ * LOOK, towards the home camera, instead of LOOK itself: a tighter arc, so at the limit the view sits
+ * ~0.5 m further left and the room fills the frame rather than the bare back wall. The two arcs share
+ * a tangent at the home angle, so the path stays smooth.
+ */
+const SWING_PIVOT = 1.28;
 const MIN_POLAR = 0.5;
 
 const DAY_BG = new Color("#dfe5ea");
@@ -610,8 +653,15 @@ function Room({ resetRef, night }: { resetRef: MutableRefObject<(() => void) | n
     // close up it can roam the whole room. Zooming back out eases the view back to home.
     const d = c.object.position.distanceTo(c.target);
     const t = Math.min(1, Math.max(0, (c.maxDistance - d) / (c.maxDistance * PAN_RAMP)));
-    const lo = LOOK_V.clone().lerp(TARGET_MIN, t);
-    const hi = LOOK_V.clone().lerp(TARGET_MAX, t);
+    // Orbiting a pivot k in front of LOOK = target moving by −k·(dir(θ) − dir(home)) around LOOK.
+    // Fades out as you zoom in (where the target roams freely anyway), so the pivot never ends up behind the camera.
+    const az = Math.max(AZIMUTH, c.getAzimuthalAngle());
+    const k = SWING_PIVOT * (1 - t);
+    const home = LOOK_V.clone();
+    home.x -= k * (Math.sin(az) - Math.sin(AZIMUTH));
+    home.z -= k * (Math.cos(az) - Math.cos(AZIMUTH));
+    const lo = home.clone().lerp(TARGET_MIN, t);
+    const hi = home.clone().lerp(TARGET_MAX, t);
     const before = c.target.clone();
     c.target.clamp(lo, hi);
     // Shift the camera by the same amount so clamping doesn't swing the view.
@@ -644,9 +694,12 @@ function Room({ resetRef, night }: { resetRef: MutableRefObject<(() => void) | n
         >
           <WallNotes />
         </Clickable>
-        <Clickable href={MUSIC_HREF} title="興趣・作曲（YouTube）" label={[-2.96, 1.95, 0.08]}>
-          <HandwrittenScores />
-        </Clickable>
+        {/* Each handwritten score opens its own performance video. */}
+        {SCORES.map((sheet) => (
+          <Clickable key={sheet.seed} href={sheet.href} title={`${sheet.title} · YouTube`} label={[sheet.x, sheet.y + 0.2, 0.08]}>
+            <ScoreSheet {...sheet} />
+          </Clickable>
+        ))}
         {/* 教學經歷 (workshop photos), same story as the pegboard. */}
         <Clickable href="/about#teaching" title="教學經歷" label={[-3.15, 2.42, 0.08]}>
           <PhotoString />
@@ -754,7 +807,15 @@ function Room({ resetRef, night }: { resetRef: MutableRefObject<(() => void) | n
       <Clickable href="/about#volunteer" title="志工經歷" label={[CORK.x, CORK.y + 0.29, 0.06]} zones={[{ position: [CORK.x, CORK.y, 0.04], size: [0.44, 0.5, 0.08] }]}>
         <CorkBoard />
       </Clickable>
-      <DysonFan />
+      {/* The fan's loop is hollow, so a zone around it makes the whole fan easy to hover. */}
+      <Clickable
+        href={ROOM_LINKS.fan}
+        title="個人主站 · hyc.eshachem.com"
+        label={[FAN_POS[0], 1.16, FAN_POS[2]]}
+        zones={[{ position: [FAN_POS[0], 0.53, FAN_POS[2]], size: [0.26, 1.06, 0.26] }]}
+      >
+        <DysonFan />
+      </Clickable>
       {/* 滑雪經歷: skis and the trail map pinned behind them light up together → 興趣經歷 › 滑雪 on /about. */}
       <Clickable href="/about#interests-ski" title="興趣・滑雪" label={[SKIS_CX, 1.82, 0.12]} zones={[{ position: [SKIS_CX, 0.85, 0.16], size: [0.56, 1.72, 0.32] }]}>
         <TrailMap />
@@ -775,11 +836,14 @@ function Room({ resetRef, night }: { resetRef: MutableRefObject<(() => void) | n
       </Clickable>
       <Football position={[DESK.x0 + 0.62, 0, 0.3]} />
       <GuitarFootstool position={[DESK_CX + 0.1, 0, 0.42]} yaw={0.15} />
+      {/* Between the footstool and the NAS: marimba mallets and drumsticks in a tube. */}
+      <MalletHolder position={[DESK_CX + 0.39, 0, 0.2]} />
       {/* 音樂經歷: both guitars, including the gap between them → 興趣經歷 › 音樂 on /about. */}
       <Clickable href="/about#music" title="音樂經歷" label={[SHEET_CAB_CX, 2.08, 0.2]} zones={[{ position: [SHEET_CAB_CX, 1.43, 0.11], size: [0.92, 1.06, 0.2] }]}>
         <Guitars />
       </Clickable>
-      <GamingChair position={[DESK_CX - 0.05, 0, 1.12]} yaw={-0.8} />
+      {/* Pushed back far enough that its left armrest clears the shallow drawers when they're open. */}
+      <GamingChair position={[DESK_CX - 0.05, 0, 1.22]} yaw={-0.8} />
       {/* Left-drag orbits, right-drag / shift-drag / two-finger drag pans, wheel / pinch zooms toward the cursor. */}
       <OrbitControls
         ref={controlsRef}
@@ -794,7 +858,7 @@ function Room({ resetRef, night }: { resetRef: MutableRefObject<(() => void) | n
         panSpeed={0.8}
         zoomSpeed={0.9}
         minAzimuthAngle={0.18}
-        maxAzimuthAngle={Math.PI / 2 - 0.18}
+        maxAzimuthAngle={MAX_AZIMUTH}
         minPolarAngle={MIN_POLAR}
         maxPolarAngle={1.45}
         onChange={clampTarget}
@@ -812,12 +876,16 @@ function Room({ resetRef, night }: { resetRef: MutableRefObject<(() => void) | n
 
 export default function RoomScene() {
   const resetRef = useRef<(() => void) | null>(null);
-  const [night, setNight] = useState(readStoredNight);
-  const toggleNight = () =>
-    setNight((v) => {
-      storeNight(!v);
-      return !v;
-    });
+  // Follows the device's light/dark setting unless the visitor has flipped the toggle this visit.
+  const deviceDark = useSyncExternalStore(subscribeDeviceDark, isDeviceDark, () => false);
+  const [override, setOverride] = useState(readNightOverride);
+  const night = override ?? deviceDark;
+  const toggleNight = () => {
+    const next = !night;
+    const value = next === deviceDark ? null : next;
+    storeNightOverride(value);
+    setOverride(value);
+  };
   return (
     <div className={styles.root}>
       <div className={styles.viewControls}>
@@ -830,6 +898,7 @@ export default function RoomScene() {
         </button>
         <RoomGuide />
       </div>
+      <RoomHint />
       <Canvas
         className={styles.canvas}
         shadows

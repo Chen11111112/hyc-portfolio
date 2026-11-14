@@ -67,6 +67,13 @@ export const VOLUNTEER_BOARD = {
 /** Where the handwritten scores above the marimba link to (your works). */
 export const MUSIC_HREF = "https://www.youtube.com/@Hy.C";
 
+/** Handwritten score sheets on the side wall (same order as SCORES in SideWallExtras): each opens its video. */
+export const SCORE_VIDEOS = [
+  { title: "Time Flies", href: "https://youtu.be/Doa9pEqQq9M" },
+  { title: "Apart", href: "https://youtu.be/9zVz1PaZFps" },
+  { title: "日日", href: "https://youtu.be/ijGTncUqdQM" },
+] as const;
+
 /**
  * Polaroids on the string above the marimba (workshop photos). Put images in public/room/workshops/
  * and set `src` (e.g. "/room/workshops/2025-ai.jpg"); entries without `src` show a placeholder picture.
@@ -75,6 +82,8 @@ export const WORKSHOP_PHOTOS: { src?: string }[] = [{}, {}, {}, {}, {}, {}];
 
 /** Click-through destinations for room props. */
 export const ROOM_LINKS = {
+  /** Dyson fan → the main personal site (the minimal one on the business card and shared in classes). */
+  fan: "https://hyc.eshachem.com/",
   whiteboard: "https://nextjs.hychen.space",
   bookshelf: "https://course.hychen.space",
   marimba: "https://www.youtube.com/@Hy.C",

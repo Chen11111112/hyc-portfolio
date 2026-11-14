@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import IconWhite from "@/components/Brand/IconWhite";
 import WordmarkWhite from "@/components/Brand/WordmarkWhite";
-import { BOOT_READY, isBootReady } from "@/lib/boot";
+import { BOOT_READY, isBootReady, markBootDone } from "@/lib/boot";
 import styles from "./BootScreen.module.scss";
 
 // Length of the intro in BootScreen.module.scss; only used where the browser
@@ -33,6 +33,7 @@ export default function BootScreen() {
       // Without motion there is no fade, so no transition end to wait for.
       const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       setPhase(still ? "done" : "leave");
+      markBootDone();
     };
 
     const onReady = () => {

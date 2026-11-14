@@ -1,4 +1,4 @@
-import { MUSIC_HREF, ROOM_LINKS } from "@/lib/roomContent";
+import { ROOM_LINKS, SCORE_VIDEOS } from "@/lib/roomContent";
 
 /** One clickable prop in the room: what it is, where it leads. Keep in sync with the <Clickable>s in RoomScene. */
 export type GuideItem = { object: string; title: string; href: string };
@@ -9,6 +9,7 @@ export const ROOM_GUIDE: GuideGroup[] = [
     heading: "關於我",
     items: [
       { object: "書桌上的電腦與手機", title: "自我介紹", href: "/about" },
+      { object: "Dyson 電風扇", title: "個人主站", href: ROOM_LINKS.fan },
       { object: "海報牆", title: "專案經歷", href: "/about#projects" },
       { object: "洞洞板照片・照片串", title: "教學經歷", href: "/about#teaching" },
       { object: "證書牆", title: "證照", href: "/about#certifications" },
@@ -35,9 +36,10 @@ export const ROOM_GUIDE: GuideGroup[] = [
     items: [
       { object: "馬林巴琴・MIDI 鍵盤", title: "興趣・作曲", href: ROOM_LINKS.marimba },
       { object: "麥克風", title: "興趣・作曲", href: ROOM_LINKS.microphone },
-      { object: "牆上手寫樂譜", title: "YouTube", href: MUSIC_HREF },
+      ...SCORE_VIDEOS.map((v) => ({ object: `牆上樂譜「${v.title}」`, title: "YouTube", href: v.href })),
       { object: "黑膠唱盤", title: "Instagram", href: ROOM_LINKS.turntable },
       { object: "時鐘", title: "切換台北／當地時間", href: "" },
+      { object: "書桌抽屜", title: "打開看看裡面的小東西", href: "" },
     ],
   },
 ];

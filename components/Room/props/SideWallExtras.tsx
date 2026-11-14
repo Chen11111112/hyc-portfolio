@@ -4,7 +4,7 @@ import { useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { CatmullRomCurve3, SRGBColorSpace, TubeGeometry, Vector3, type Group, type Texture } from "three";
-import { WORKSHOP_PHOTOS } from "@/lib/roomContent";
+import { SCORE_VIDEOS, WORKSHOP_PHOTOS } from "@/lib/roomContent";
 import { rng } from "../layout";
 import { useCanvasTexture, type Draw } from "./canvasTexture";
 import { mathDraw } from "./DeskItems";
@@ -145,13 +145,14 @@ function scoreDraw(seed: number, title: string): Draw {
   };
 }
 
-const SCORES = [
-  { x: -2.66, y: 1.72, tilt: 0.05, seed: 3, title: "Sketch No. 1" },
-  { x: -2.96, y: 1.75, tilt: -0.03, seed: 7, title: "Untitled (marimba)" },
-  { x: -3.26, y: 1.7, tilt: 0.04, seed: 11, title: "Groove in D" },
-];
+/** Sheet placement; titles and links come from SCORE_VIDEOS, in the same order. */
+export const SCORES = [
+  { x: -2.66, y: 1.72, tilt: 0.05, seed: 3 },
+  { x: -2.96, y: 1.75, tilt: -0.03, seed: 7 },
+  { x: -3.26, y: 1.7, tilt: 0.04, seed: 11 },
+].map((s, i) => ({ ...s, title: SCORE_VIDEOS[i].title, href: SCORE_VIDEOS[i].href }));
 
-function ScoreSheet({ x, y, tilt, seed, title }: (typeof SCORES)[number]) {
+export function ScoreSheet({ x, y, tilt, seed, title }: { x: number; y: number; tilt: number; seed: number; title: string }) {
   const draw = useCallback<Draw>((ctx, w, h) => scoreDraw(seed, title)(ctx, w, h), [seed, title]);
   const map = useCanvasTexture(draw, 300, 420);
   return (
@@ -168,15 +169,6 @@ function ScoreSheet({ x, y, tilt, seed, title }: (typeof SCORES)[number]) {
   );
 }
 
-export function HandwrittenScores() {
-  return (
-    <group>
-      {SCORES.map((s) => (
-        <ScoreSheet key={s.seed} {...s} />
-      ))}
-    </group>
-  );
-}
 
 /* ------------------------------ Polaroid string ----------------------------- */
 

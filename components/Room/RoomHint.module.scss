@@ -1,0 +1,121 @@
+/* Sits right above the view controls (bottom right), next to the 導覽 button it points at. */
+.hint {
+  position: absolute;
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+  z-index: 4;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  width: min(430px, calc(100vw - 32px));
+  padding: 14px 10px 14px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(16, 17, 20, 0.82);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+  color: #f2f2f0;
+  font: 500 15px/1.75 var(--font-sans), system-ui, sans-serif;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
+
+  &[data-show="true"] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.text {
+  flex: 1;
+  margin: 0;
+  white-space: pre-line;
+}
+
+.accent {
+  color: #ffb04a;
+  font-weight: 700;
+}
+
+/* Rest of the text, laid out but invisible, so the box keeps its final size while typing. */
+.untyped {
+  visibility: hidden;
+}
+
+.caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin-right: -2px; /* takes no room, so the text doesn't reflow as it moves */
+  vertical-align: text-bottom;
+  background: currentColor;
+
+  &[data-done="true"] {
+    animation: blink 1.05s steps(1) infinite;
+  }
+}
+
+.close {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  margin-top: -4px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #9aa1a9;
+  font-size: 13px;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #ffb04a;
+    outline-offset: 1px;
+  }
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hint {
+    transition: none;
+  }
+
+  .caret {
+    display: none;
+  }
+}
+
+/* Phones: the view controls sit at the top right and the terminal at the bottom, so the hint goes under the controls. */
+@media (max-width: 600px) {
+  .hint {
+    top: calc(56px + env(safe-area-inset-top, 0px));
+    right: 12px;
+    bottom: auto;
+    width: calc(100vw - 24px);
+    padding: 12px 8px 12px 14px;
+    font-size: 14px;
+  }
+}
