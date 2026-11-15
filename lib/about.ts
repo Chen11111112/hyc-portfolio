@@ -117,6 +117,8 @@ const PROJECT_NAMES = [
 const PROJECT_LINKS: Record<string, string> = {
   "智慧病歷生成式人工智慧輔助優化及擴充急診版資訊服務專案": "https://emergency.ntubimdbirc.tw/",
   "細胞病理管理平臺": "https://cell.ntubimdbirc.tw/",
+  // 益協實業有限公司
+  "官方網站": "https://eshachem.com/",
   "智慧新聞 - 英文學習平臺": "https://intelligence-news.hychen.space/",
   "3D列印租借系統": "https://birc-support.ntubimdbirc.tw/",
   "機房練習申請系統": "https://birc-support.ntubimdbirc.tw/",
