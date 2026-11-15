@@ -91,20 +91,20 @@ export type ProjectExperienceRow = {
   name: string;
   detail: string;
   tech: string;
+  /** Public site of the project, if any. */
+  href?: string;
 };
 
 const ORG_NAMES = ["益協實業有限公司", "臺北榮民總醫院", "國立臺北商業大學"];
 
 const PROJECT_NAMES = [
-  // 益協實業有限公司 — must stay first: it matches the first "官方網站" in the line.
-  "官方網站",
   "智慧病歷生成式人工智慧輔助優化及擴充急診版資訊服務專案",
   "細胞病理管理平臺",
+  // 益協實業有限公司 — sits before "商業智慧研究中心 - 官方網站" in the line, so the first match is this one.
+  "官方網站",
   "智慧新聞 - 英文學習平臺",
   "3D列印租借系統",
   "機房練習申請系統",
-  "競賽行政支援系統",
-  "研習、活動線上簽到系統",
   "商業智慧研究中心 - 官方網站",
   "失誤招領系統",
   "商業智慧研究中心 - 後臺管理系統",
@@ -112,6 +112,17 @@ const PROJECT_NAMES = [
   "智取時光 - 與三商家購合作",
   "使用 RAG 打造個人助理 – Scrum 助理",
 ];
+
+/** Projects with a public site: the name links there. */
+const PROJECT_LINKS: Record<string, string> = {
+  "智慧病歷生成式人工智慧輔助優化及擴充急診版資訊服務專案": "https://emergency.ntubimdbirc.tw/",
+  "細胞病理管理平臺": "https://cell.ntubimdbirc.tw/",
+  "智慧新聞 - 英文學習平臺": "https://intelligence-news.hychen.space/",
+  "3D列印租借系統": "https://birc-support.ntubimdbirc.tw/",
+  "機房練習申請系統": "https://birc-support.ntubimdbirc.tw/",
+  "商業智慧研究中心 - 官方網站": "https://www.ntubimdbirc.tw/",
+  "使用 RAG 打造個人助理 – Scrum 助理": "https://scrum-assistant.hychen.space/",
+};
 
 function splitDetailAndTech(rest: string): { detail: string; tech: string } {
   const built = rest.match(/^(使用.+?進行全端開發)(.*)$/);
@@ -147,7 +158,7 @@ export function parseProjectExperience(raw: string): ProjectExperienceRow[] {
     const { detail, tech } = splitDetailAndTech(
       body.slice(at + name.length, end).trim(),
     );
-    rows.push({ org, name, detail, tech });
+    rows.push({ org, name, detail, tech, href: PROJECT_LINKS[name] });
     cursor = end;
   }
 

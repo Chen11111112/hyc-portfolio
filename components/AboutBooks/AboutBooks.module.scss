@@ -310,6 +310,28 @@
   line-height: 1.5;
 }
 
+.projectLink {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 176, 74, 0.55);
+  text-underline-offset: 3px;
+
+  &:hover {
+    color: #ffb04a;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #ffb04a;
+    outline-offset: 2px;
+  }
+}
+
+.projectLinkArrow {
+  margin-left: 4px;
+  color: #ffb04a;
+  font-size: 0.85em;
+}
+
 .projectDetail {
   margin: 4px 0 0;
   color: #a7a39a;

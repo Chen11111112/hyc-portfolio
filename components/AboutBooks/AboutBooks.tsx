@@ -102,7 +102,18 @@ function Projects({ rows }: { rows: ProjectExperienceRow[] }) {
               .filter((r) => r.org === org)
               .map((r) => (
                 <li key={r.name} className={styles.project}>
-                  <p className={styles.projectName}>{r.name}</p>
+                  <p className={styles.projectName}>
+                    {r.href ? (
+                      <a href={r.href} target="_blank" rel="noopener noreferrer" className={styles.projectLink}>
+                        {r.name}
+                        <span className={styles.projectLinkArrow} aria-hidden>
+                          ↗
+                        </span>
+                      </a>
+                    ) : (
+                      r.name
+                    )}
+                  </p>
                   {r.detail && <p className={styles.projectDetail}>{r.detail}</p>}
                   {r.tech && (
                     <p className={styles.chips}>
