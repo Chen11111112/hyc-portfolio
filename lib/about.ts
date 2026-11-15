@@ -93,9 +93,11 @@ export type ProjectExperienceRow = {
   tech: string;
 };
 
-const ORG_NAMES = ["臺北榮民總醫院", "國立臺北商業大學"];
+const ORG_NAMES = ["益協實業有限公司", "臺北榮民總醫院", "國立臺北商業大學"];
 
 const PROJECT_NAMES = [
+  // 益協實業有限公司 — must stay first: it matches the first "官方網站" in the line.
+  "官方網站",
   "智慧病歷生成式人工智慧輔助優化及擴充急診版資訊服務專案",
   "細胞病理管理平臺",
   "智慧新聞 - 英文學習平臺",
@@ -115,7 +117,7 @@ function splitDetailAndTech(rest: string): { detail: string; tech: string } {
   const built = rest.match(/^(使用.+?進行全端開發)(.*)$/);
   if (built) return { detail: built[1] ?? "", tech: built[2] ?? "" };
 
-  const stackAt = rest.indexOf("Next.js（");
+  const stackAt = rest.search(/Next\.js[（、]/);
   if (stackAt >= 0) {
     return { detail: rest.slice(0, stackAt), tech: rest.slice(stackAt) };
   }
