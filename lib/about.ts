@@ -100,13 +100,13 @@ const ORG_NAMES = ["益協實業有限公司", "臺北榮民總醫院", "國立�
 const PROJECT_NAMES = [
   "智慧病歷生成式人工智慧輔助優化及擴充急診版資訊服務專案",
   "細胞病理管理平臺",
-  // 益協實業有限公司 — sits before "商業智慧研究中心 - 官方網站" in the line, so the first match is this one.
-  "官方網站",
+  // 益協實業有限公司
+  "公司形象網站",
   "智慧新聞 - 英文學習平臺",
-  "3D列印租借系統",
+  "3D列印機使用申請系統",
   "機房練習申請系統",
   "商業智慧研究中心 - 官方網站",
-  "失誤招領系統",
+  "資管系 - 失誤招領系統",
   "商業智慧研究中心 - 後臺管理系統",
   "校園活動系統",
   "智取時光 - 與三商家購合作",
@@ -123,9 +123,9 @@ const PROJECT_LINKS: Record<string, string> = {
   "智慧病歷生成式人工智慧輔助優化及擴充急診版資訊服務專案": "https://emergency.ntubimdbirc.tw/",
   "細胞病理管理平臺": "https://cell.ntubimdbirc.tw/",
   // 益協實業有限公司
-  "官方網站": "https://eshachem.com/",
+  "公司形象網站": "https://eshachem.com/",
   "智慧新聞 - 英文學習平臺": "https://intelligence-news.hychen.space/",
-  "3D列印租借系統": "https://birc-support.ntubimdbirc.tw/",
+  "3D列印機使用申請系統": "https://birc-support.ntubimdbirc.tw/",
   "機房練習申請系統": "https://birc-support.ntubimdbirc.tw/",
   "商業智慧研究中心 - 官方網站": "https://www.ntubimdbirc.tw/",
   "智取櫃統計儀表板": "https://dashboard.hychen.space/",
