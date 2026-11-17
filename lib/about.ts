@@ -95,7 +95,7 @@ export type ProjectExperienceRow = {
   href?: string;
 };
 
-const ORG_NAMES = ["益協實業有限公司", "臺北榮民總醫院", "國立臺北商業大學"];
+const ORG_NAMES = ["益協實業有限公司", "臺北榮民總醫院", "國立臺北商業大學", "個人作品集"];
 
 const PROJECT_NAMES = [
   "智慧病歷生成式人工智慧輔助優化及擴充急診版資訊服務專案",
@@ -110,7 +110,12 @@ const PROJECT_NAMES = [
   "商業智慧研究中心 - 後臺管理系統",
   "校園活動系統",
   "智取時光 - 與三商家購合作",
+  "智取櫃統計儀表板",
+  // 個人作品集
   "使用 RAG 打造個人助理 – Scrum 助理",
+  "複製任何風格的 Design Tokens",
+  "GitLab助教系統",
+  "商智中心黑客松形象官網",
 ];
 
 /** Projects with a public site: the name links there. */
@@ -123,7 +128,10 @@ const PROJECT_LINKS: Record<string, string> = {
   "3D列印租借系統": "https://birc-support.ntubimdbirc.tw/",
   "機房練習申請系統": "https://birc-support.ntubimdbirc.tw/",
   "商業智慧研究中心 - 官方網站": "https://www.ntubimdbirc.tw/",
+  "智取櫃統計儀表板": "https://dashboard.hychen.space/",
   "使用 RAG 打造個人助理 – Scrum 助理": "https://scrum-assistant.hychen.space/",
+  "複製任何風格的 Design Tokens": "https://styles-token.hychen.space/",
+  "商智中心黑客松形象官網": "https://birc-hackathon.hychen.space/",
 };
 
 function splitDetailAndTech(rest: string): { detail: string; tech: string } {

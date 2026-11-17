@@ -9,7 +9,7 @@
 
 專案經歷
 
-單位活動名稱內容技術說明臺北榮民總醫院智慧病歷生成式人工智慧輔助優化及擴充急診版資訊服務專案使用Next.js進行全端開發Next.js（app router)、MySQL、LLM、DB2、Python細胞病理管理平臺Next.js（app router)、SpringBoot益協實業有限公司官方網站Next.js、Three.js、TypeScript國立臺北商業大學智慧新聞 - 英文學習平臺Next.js（app router)、MongoDB、Nvidia NIM、Google SSO、Python3D列印租借系統Next.js（app router)、MySQL、Google SSO、Python機房練習申請系統Next.js（app router)、MySQL、Google SSO、Python商業智慧研究中心 - 官方網站Next.js（page router)失誤招領系統使用Django進行全端開發Django商業智慧研究中心 - 後臺管理系統擔任敏捷教練與全端指導校園活動系統擔任敏捷教練與全端指導智取時光 - 與三商家購合作行政協助研習使用 RAG 打造個人助理 – Scrum 助理使用Next.js進行全端開發Next.js（app router)、Nvidia NIM、RAG、PostgresqlNext.j s框架下的全端開發示範專案Next.js（app router)
+單位活動名稱內容技術說明臺北榮民總醫院智慧病歷生成式人工智慧輔助優化及擴充急診版資訊服務專案使用Next.js進行全端開發Next.js（app router)、MySQL、LLM、DB2、Python細胞病理管理平臺Next.js（app router)、SpringBoot益協實業有限公司官方網站Next.js、Three.js、TypeScript國立臺北商業大學智慧新聞 - 英文學習平臺Next.js（app router)、MongoDB、Nvidia NIM、Google SSO、Python3D列印租借系統Next.js（app router)、MySQL、Google SSO、Python機房練習申請系統Next.js（app router)、MySQL、Google SSO、Python商業智慧研究中心 - 官方網站Next.js（page router)失誤招領系統使用Django進行全端開發Django商業智慧研究中心 - 後臺管理系統擔任敏捷教練與全端指導校園活動系統擔任敏捷教練與全端指導智取時光 - 與三商家購合作行政協助智取櫃統計儀表板個人作品集使用 RAG 打造個人助理 – Scrum 助理使用Next.js進行全端開發Next.js（app router)、Nvidia NIM、RAG、Postgresql複製任何風格的 Design TokensGitLab助教系統協助批改學員程式碼商智中心黑客松形象官網
 
 競賽經歷
 
